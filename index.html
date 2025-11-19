@@ -1,11 +1,313 @@
+<!-- ...existing code... -->
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PSMS</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Zenya PSMS — Home</title>
+    <link rel="stylesheet" href="login.css">
+<style>
+  :root {
+  --accent: #2b7a78;
+  --accent-600: #23655b;
+  --muted: #6b7280;
+  --bg: #f9fafb;
+  --surface: #ffffff;
+  --radius: 12px;
+  --shadow-sm: 0 3px 10px rgba(16, 24, 40, 0.05);
+  --shadow-md: 0 6px 18px rgba(16, 24, 40, 0.08);
+  --shadow-lg: 0 10px 30px rgba(15, 23, 42, 0.1);
+  --max-width: 1100px;
+}
+
+
+* {
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  color: #0f172a;
+  background: var(--bg);
+  line-height: 1.6;
+  letter-spacing: 0.2px;
+  display: flex;
+  flex-direction: column;
+}
+
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.6) 100%);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: var(--shadow-sm);
+}
+
+.logo {
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 1.5rem;
+  letter-spacing: 0.4px;
+}
+
+nav {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+nav a {
+  color: var(--muted);
+  text-decoration: none;
+  padding: 0.45rem 0.85rem;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+nav a:hover {
+  color: var(--accent-600);
+  background: rgba(43, 122, 120, 0.08);
+}
+
+/* Buttons */
+.btnPrimary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 0.7rem 1.3rem;
+  border-radius: 10px;
+  font-weight: 600;
+  box-shadow: 0 6px 18px rgba(35, 101, 91, 0.18);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.btnPrimary:hover {
+  background: var(--accent-600);
+  transform: translateY(-2px);
+}
+
+.btnGhost {
+  background: transparent;
+  color: var(--muted);
+  border: none;
+  padding: 0.5rem;
+  font-weight: 500;
+  text-decoration: underline;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.btnGhost:hover {
+  color: var(--accent-600);
+}
+
+/* Main unified layout */
+main {
+  width: 100%;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 2rem 1.25rem;
+}
+
+/* Hero section — full width look */
+.hero {
+  text-align: center;
+  padding: 5rem 1rem 3rem;
+  background: linear-gradient(180deg, #ffffff 0%, #f3f7f6 100%);
+  color: #0f172a;
+}
+
+.hero h1 {
+  font-size: clamp(1.8rem, 3.6vw, 2.7rem);
+  margin-bottom: 1rem;
+  line-height: 1.15;
+  font-weight: 700;
+}
+
+.hero .lead {
+  max-width: 650px;
+  margin: 0 auto 1.5rem;
+  color: var(--muted);
+  font-size: 1.05rem;
+}
+
+.cta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+}
+
+
+.card-grid {
+  margin: 3rem auto 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  border: 1px solid rgba(15, 23, 42, 0.05);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+}
+
+.card h3 {
+  color: var(--accent-600);
+  margin-top: 0;
+}
+
+.card p {
+  color: var(--muted);
+}
+
+
+aside[aria-label="Quick actions"] {
+  margin: 3rem auto;
+  max-width: 700px;
+  padding: 2rem 1.5rem;
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbfb 100%);
+  border: 1px solid rgba(15, 23, 42, 0.05);
+  box-shadow: var(--shadow-md);
+}
+
+aside strong {
+  display: block;
+  margin-bottom: 0.75rem;
+  font-size: 1.15rem;
+  color: var(--accent-600);
+}
+
+aside ul {
+  margin: 0.5rem 0 0;
+  padding-left: 1.2rem;
+  color: var(--muted);
+}
+
+
+#about {
+  margin: 3rem auto 4rem;
+  text-align: center;
+  max-width: 700px;
+}
+
+#about h2 {
+  color: var(--accent-600);
+  font-size: 1.6rem;
+  margin-bottom: 0.75rem;
+}
+
+#about .lead {
+  color: var(--muted);
+  font-size: 1rem;
+}
+
+
+footer {
+  background: linear-gradient(180deg, #f8fbfb 0%, #ffffff 100%);
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--muted);
+  border-top: 1px solid rgba(15, 23, 42, 0.04);
+  font-size: 0.95rem;
+}
+
+footer a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+footer a:hover {
+  color: var(--accent-600);
+}
+
+</style>
+
 </head>
+
 <body>
-    
+    <header>
+        <h2 class="logo">Zenya PSMS</h2>
+        <nav>
+            <a href="#about">About</a>
+            <a href="#features">Features</a>
+            <a href="#contact">Contact</a>
+            <a href="login.html" class="btnPrimary" aria-label="Open login">Login</a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero" aria-labelledby="hero-title">
+            <div>
+                <h1 id="hero-title">Parking made simple — manage spaces, users and bookings</h1>
+                <p class="lead">Zenya Parking Space Management System (PSMS) helps you register vehicles, reserve spots
+                    and monitor availability from one simple interface.</p>
+                <div class="cta">
+                    <a href="login.html" class="btnPrimary">Get started — Login</a>
+                    <a href="signup.html"
+                        style="align-self:center;color:var(--muted);text-decoration:underline">Register</a>
+                </div>
+
+                <div id="features" class="card-grid" aria-hidden="false">
+                    <article class="card">
+                        <h3>Real-time availability</h3>
+                        <p class="lead" style="margin:.5rem 0 0">See free and occupied spaces at a glance.</p>
+                    </article>
+                    <article class="card">
+                        <h3>User & vehicle profiles</h3>
+                        <p class="lead" style="margin:.5rem 0 0">Store driver and license plate details securely.</p>
+                    </article>
+                    <article class="card">
+                        <h3>Easy reservations</h3>
+                        <p class="lead" style="margin:.5rem 0 0">Reserve a spot quickly from the dashboard.</p>
+                    </article>
+                </div>
+            </div>
+
+            <aside aria-label="Quick actions">
+                <strong>Quick actions</strong>
+                <ul style="padding-left:1rem;margin:.5rem 0 0">
+                    <li><a href="login.html">Login to your account</a></li>
+                    <li><a href="signup.html">Create a new account</a></li>
+                </ul>
+            </aside>
+        </section>
+
+        <section id="about" style="margin-top:2rem">
+            <h2>About</h2>
+            <p class="lead">This landing page directs users to the system authentication (login/registration). After
+                logging in you'll access the Parking Space Management dashboard and features.</p>
+        </section>
+    </main>
+
+    <footer>
+        <small>© Zenya PSMS — <a href="#contact">Contact</a></small>
+    </footer>
 </body>
+
 </html>
