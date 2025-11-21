@@ -4,14 +4,23 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Zenya PSMS — Sign Up</title>
+    <title> PSMS — Sign Up</title>
     <link rel="stylesheet" >
     <style>
-        /* Small page-specific tweaks */
+       body{
+            background: #dcf0de;
+            margin: 0;
+            padding: 0;
+       }
+
         main {
-            max-width: 680px;
+            max-width: 60%;
             margin: 2.5rem auto;
-            padding: 1rem
+            padding: 1rem;
+            z-index: 1;
+            background: #fff;
+            border: 1px solid #aaa6a6;
+            box-shadow: 5px 10px 5px 10px rgba(16, 24, 40, 0.05);
         }
         header{
             position: sticky;
@@ -50,13 +59,17 @@
             color: #7a1616;
             border: 1px solid #f2c6c6
         }
+        label{
+            display: flex;
+            flex-direction: column;
+        }
     </style>
 </head>
 
 <body>
     <header
         style="padding:1rem 1.25rem;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center">
-        <h2 class="logo" style="margin:0;color:#2b7a78">Zenya PSMS</h2>
+        <h2 class="logo" style="margin:0;color:#2b7a78">PSMS</h2>
         <nav>
             <a href="index.html" style="margin-right:1rem;color:#666;text-decoration:none">Home</a>
             <a href="login.html" class="btnPrimary"
@@ -69,49 +82,49 @@
         <p class="muted">Fill in the details to register. After signing up you'll be redirected to the login page.</p>
 
         <form id="signupForm" novalidate>
-            <label style="display:block;margin-top:1rem">
+            <label style="display:flex; flex-direction: column; margin-top:1rem">
                 Full name
-                <input id="name" name="name" type="text" required placeholder="Jane Doe"
-                    style="width:100%;padding:.6rem;margin-top:.25rem;border:1px solid #ddd;border-radius:6px">
+                <input id="name" name="name" type="text" required placeholder="FullName"
+                    style="width:90%;padding:.6rem;margin-top:.25rem;border:1px solid #ddd;border-radius:6px">
             </label>
 
-            <label style="display:block;margin-top:1rem">
+            <label style="display:flex; flex-direction: column; margin-top:1rem">
                 Email
                 <input id="email" name="email" type="email" required placeholder="you@example.com"
-                    style="width:100%;padding:.6rem;margin-top:.25rem;border:1px solid #ddd;border-radius:6px">
+                    style="width:90%;padding:.6rem;margin-top:.25rem;border:1px solid #ddd;border-radius:6px">
             </label>
 
-            <label style="display:block;margin-top:1rem">
-                License plate number
-                <input id="plate" name="plate" type="text" required placeholder="ABC-1234"
-                    style="width:100%;padding:.6rem;margin-top:.25rem;border:1px solid #ddd;border-radius:6px">
-            </label>
-
-            <label style="display:block;margin-top:1rem">
+            <label style="display:flex; flex-direction: column; margin-top:1rem">
                 Phone
                 <input id="phone" name="phone" type="tel" required placeholder="+2547xxxxxxxx"
-                    style="width:100%;padding:.6rem;margin-top:.25rem;border:1px solid #ddd;border-radius:6px">
+                    style="width:90%;padding:.6rem;margin-top:.25rem;border:1px solid #ddd;border-radius:6px">
             </label>
 
-            <label style="display:block;margin-top:1rem">
+            <label style="display:flex; flex-direction: column; margin-top:1rem">
+                License plate number
+                <input id="plate" name="plate" type="text" required placeholder="KDA-123K"
+                    style="width:90%;padding:.6rem;margin-top:.25rem;border:1px solid #ddd;border-radius:6px">
+            </label>
+
+            <label style="display:flex; flex-direction: column; margin-top:1rem">
                 Password
                 <input id="password" name="password" type="password" required minlength="6"
                     placeholder="At least 6 characters"
-                    style="width:100%;padding:.6rem;margin-top:.25rem;border:1px solid #ddd;border-radius:6px">
+                    style="width:90%;padding:.6rem;margin-top:.25rem;border:1px solid #ddd;border-radius:6px">
             </label>
 
-            <label style="display:block;margin-top:1rem">
+            <label style="display:flex; flex-direction: column; margin-top:1rem">
                 Confirm password
                 <input id="confirmPassword" name="confirmPassword" type="password" required minlength="6"
                     placeholder="Re-enter password"
-                    style="width:100%;padding:.6rem;margin-top:.25rem;border:1px solid #ddd;border-radius:6px">
+                    style="width:90%;padding:.6rem;margin-top:.25rem;border:1px solid #ddd;border-radius:6px">
             </label>
 
             <div class="actions">
                 <button id="submitBtn" type="submit" class="btnPrimary"
                     style="background:#2b7a78;color:#fff;padding:.6rem .9rem;border-radius:6px;border:0;cursor:pointer">Sign
                     up</button>
-                <a href="login.html" style="color:#2b7a78;text-decoration:underline">Already have an account? Login</a>
+                <span>Already have an account? <a href="login.html" style="color:#2b7a78;text-decoration:underline">Login</a></span>
             </div>
 
             <div id="message" class="msg" role="status" aria-live="polite"></div>
@@ -119,69 +132,98 @@
     </main>
 
     <footer style="padding:1rem;text-align:center;color:#666;border-top:1px solid #eee">
-        <small>© Zenya PSMS — <a href="index.html">Home</a></small>
+        <small>© Tonny PSMS — <a href="index.html">Home</a></small>
     </footer>
 
-    <script>
-        (function () {
-            const form = document.getElementById('signupForm');
-            const msg = document.getElementById('message');
-            const submitBtn = document.getElementById('submitBtn');
+    <script type="module">
+        // Import Firebase config
+        import { auth, db } from "./firebase-config.js";
 
-            function showMessage(text, type = 'success') {
-                msg.textContent = text;
-                msg.className = 'msg ' + (type === 'success' ? 'success' : 'error');
-                msg.style.display = 'block';
+        // Firebase imports
+        import {
+            createUserWithEmailAndPassword
+        } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
+        import {
+            doc,
+            setDoc
+        } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+        // Form references
+        const form = document.getElementById('signupForm');
+        const msg = document.getElementById('message');
+        const submitBtn = document.getElementById('submitBtn');
+
+        function showMessage(text, type = 'success') {
+            msg.textContent = text;
+            msg.className = 'msg ' + (type === 'success' ? 'success' : 'error');
+            msg.style.display = 'block';
+        }
+
+        function validatePasswords(pw, confirm) {
+            return pw === confirm;
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Collect input data
+            const name = form.name.value.trim();
+            const email = form.email.value.trim();
+            const phone = form.phone.value.trim();
+            const plate = form.plate.value.trim();
+            const password = form.password.value;
+            const confirmPassword = form.confirmPassword.value;
+
+            // Basic validation
+            if (!name || !email || !phone || !plate || !password || !confirmPassword) {
+                showMessage("Please fill in all fields", "error");
+                return;
             }
 
-            function validatePasswords(pw, confirm) {
-                return pw === confirm;
+            if (!validatePasswords(password, confirmPassword)) {
+                showMessage("Passwords do not match", "error");
+                return;
             }
 
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
+            // Prevent duplicate clicks
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Signing up...";
 
-                // simple client-side validation
-                const name = form.name.value.trim();
-                const email = form.email.value.trim();
-                const plate = form.plate.value.trim();
-                const phone = form.phone.value.trim();
-                const password = form.password.value;
-                const confirmPassword = form.confirmPassword.value;
+            try {
+                // Create user account in Firebase Auth
+                const userCred = await createUserWithEmailAndPassword(auth, email, password);
+                const uid = userCred.user.uid;
 
-                if (!name || !email || !plate || !phone || !password || !confirmPassword) {
-                    showMessage('Please complete all required fields.', 'error');
-                    return;
-                }
+                // Save user data in Firestore
+                await setDoc(doc(db, "users", uid), {
+                    userId: uid,
+                    name,
+                    email,
+                    phone,
+                    plate,
+                    role: "driver",       // default role
+                    createdAt: new Date()
+                });
 
-                if (!validatePasswords(password, confirmPassword)) {
-                    showMessage('Passwords do not match.', 'error');
-                    return;
-                }
+                showMessage("Signup successful!", "success");
 
-                // disable button to avoid duplicate submits
-                submitBtn.disabled = true;
-                submitBtn.textContent = 'Signing up…';
-
-                // Demo: simulate server call and then redirect to login page.
-                // Replace with real API call when wiring to backend.
+                // Redirect to login
                 setTimeout(() => {
-                    showMessage('Account created successfully. Redirecting to login…', 'success');
+                    window.location.href = "login.html";
+                }, 1200);
 
-                    // optionally persist to localStorage for demo purposes (remove for production)
-                    try {
-                        const users = JSON.parse(localStorage.getItem('psms_users') || '[]');
-                        users.push({ name, email, plate, phone, password });
-                        localStorage.setItem('psms_users', JSON.stringify(users));
-                    } catch (err) { /* ignore storage errors */ }
+            } catch (err) {
+                console.error(err);
+                showMessage("Error: " + err.message, "error");
+            }
 
-                    setTimeout(() => {
-                        window.location.href = 'login.html';
-                    }, 900);
-                }, 700);
-            });
-        })();
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Sign up";
+        });
+
     </script>
+
 </body>
 
 </html>

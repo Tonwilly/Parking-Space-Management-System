@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Create Admin</title>
+    <style>
+        body {
+            background: #dcf0de;
+            font-family: sans-serif;
+            padding: 2rem;
+        }
+        .box {
+            background: #fff;
+            max-width: 450px;
+            margin: auto;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        input {
+            width: 100%;
+            padding: .7rem;
+            margin-bottom: 1rem;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+        button {
+            width: 100%;
+            padding: .8rem;
+            border: none;
+            border-radius: 6px;
+            background: #2b7a78;
+            color: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h2>Create Admin User</h2>
+
+    <input id="adminName" type="text" placeholder="Full Name">
+    <input id="adminEmail" type="email" placeholder="Admin Email">
+    <input id="adminPassword" type="password" placeholder="Password">
+
+    <button id="createAdminBtn">Create Admin</button>
+
+    <p id="msg"></p>
+</div>
+
+<script type="module">
+    import { auth, db } from "./firebase-config.js";
+    import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
+    const msg = document.getElementById("msg");
+
+    // Only allow existing admin to open this page
+    onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+            window.location.href = "login.html";
+            return;
+        }
+
+        const snap = await import("https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js")
+            .then(fire => fire.getDoc(fire.doc(db, "users", user.uid)));
+
+        if (!snap.exists() || snap.data().role !== "admin") {
+            alert("Access denied. Only Admins can create other Admins.");
+            window.location.href = "index.html";
+        }
+    });
+
+    document.getElementById("createAdminBtn").addEventListener("click", async () => {
+        const name = adminName.value.trim();
+        const email = adminEmail.value.trim();
+        const password = adminPassword.value;
+
+        if (!name || !email || !password) {
+            msg.textContent = "All fields are required.";
+            return;
+        }
+
+        try {
+            const credential = await createUserWithEmailAndPassword(auth, email, password);
+            const uid = credential.user.uid;
+
+            await setDoc(doc(db, "users", uid), {
+                name,
+                email,
+                role: "admin",
+                createdAt: new Date()
+            });
+
+            msg.textContent = "Admin created successfully!";
+            msg.style.color = "green";
+        } catch (err) {
+            msg.textContent = err.message;
+            msg.style.color = "red";
+        }
+    });
+</script>
+
+</body>
+</html>

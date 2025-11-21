@@ -12,13 +12,10 @@
 <body>
 
     <header>
-        <h2 class="logo">Zenya PSMS</h2>
+        <h2 class="logo">PSMS</h2>
         <nav class="navigation">
             <a href="index.html">Home</a>
-            <a href="#about">About</a>
-            <a href="#services">Services</a>
-            <a href="#contact">Contact</a>
-            <button class="btnLogin">Login</button>
+            <a href="#">Contact</a>
         </nav>
     </header>
 
@@ -49,7 +46,7 @@
                     <a href="signup.html">Forgot Password?</a>
                 </div>
 
-                <button type="submit" class="btn">Login</button>
+                <button  class="btnLogin">Login</button>
 
                 <div class="login-register">
                     <p>Don't have an account? <a href="/signup.html">Sign up</a></p>
@@ -60,40 +57,81 @@
         </div>
     </div>
 
-    <script>
-        (function () {
-            const wrapper = document.querySelector('.wrapper');
-            const btnLogin = document.querySelector('.btnLogin');
-            const closeIcon = document.querySelector('.bx');
-            const loginForm = document.getElementById('loginForm');
-            const loginMessage = document.getElementById('loginMessage');
+    <script type="module">
+
+    // Import Firebase config
+    import { auth, db } from "./firebase-config.js";
+
+    // Firebase functions
+    import {
+        signInWithEmailAndPassword,
+    } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
+    import {
+        doc,
+        getDoc
+    } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 
-            closeIcon.addEventListener('click', () => {
-                window.location.href = 'index.html';
-            });
+    const loginForm = document.getElementById('loginForm');
+    const loginMessage = document.getElementById('loginMessage');
 
-            // float label behavior
-            document.querySelectorAll('.input-box input').forEach(input => {
-                input.addEventListener('focus', () => input.parentElement.classList.add('focus'));
-                input.addEventListener('blur', () => {
-                    if (!input.value) input.parentElement.classList.remove('focus');
-                });
-                if (input.value) input.parentElement.classList.add('focus');
-            });
 
-            function showLoginMessage(text, type = 'error') {
-                loginMessage.textContent = text;
-                loginMessage.style.display = 'block';
-                loginMessage.style.color = type === 'error' ? '#7a1616' : '#0b6b58';
-                loginMessage.style.background = type === 'error' ? '#fff0f0' : '#e6fff7';
-                loginMessage.style.border = type === 'error' ? '1px solid #f2c6c6' : '1px solid #c7f0df';
-                loginMessage.style.padding = '.5rem';
-                loginMessage.style.borderRadius = '6px';
+    function showLoginMessage(text, type = "error") {
+        loginMessage.textContent = text;
+        loginMessage.style.display = "block";
+        loginMessage.style.color = type === "error" ? "#7a1616" : "#0b6b58";
+        loginMessage.style.background = type === "error" ? "#fff0f0" : "#e6fff7";
+        loginMessage.style.border = type === "error" ? "1px solid #f2c6c6" : "1px solid #c7f0df";
+        loginMessage.style.padding = ".5rem";
+        loginMessage.style.borderRadius = "6px";
+    }
+
+
+
+    loginForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const email = document.getElementById("login-email").value.trim();
+        const password = document.getElementById("login-password").value;
+
+        if (!email || !password) {
+            showLoginMessage("Please enter both email and password.");
+            return;
+        }
+
+        try {
+            // Firebase authentication
+            const userCred = await signInWithEmailAndPassword(auth, email, password);
+            const uid = userCred.user.uid;
+
+            // Fetch user role
+            const snap = await getDoc(doc(db, "users", uid));
+
+            if (!snap.exists()) {
+                showLoginMessage("User record not found in database.");
+                return;
             }
 
+            const userData = snap.data();
+            const role = userData.role || "driver";
+
+            // Redirect based on role
+            if (role === "admin") {
+                window.location.href = "admin-dashboard.html";
+            } else {
+                window.location.href = "driver-dashboard.html";
+            }
+
+        } catch (err) {
+            console.error(err);
+            showLoginMessage("Login failed: " + err.message);
+        }
+
+    });
+
             // simple login handler (demo). Replace with real auth call in production.
-            loginForm.addEventListener('submit', (e) => {
+           /* loginForm.addEventListener('submit', (e) => {
                 e.preventDefault();
 
                 const email = loginForm.email.value.trim();
@@ -121,14 +159,13 @@
 
                     setTimeout(() => {
                         // change destination to your dashboard when available
-                        window.location.href = 'index.html';
+                        window.location.href = 'booking.html';
                     }, 700);
                 } else {
                     showLoginMessage('Invalid email or password. If you do not have an account, sign up first.', 'error');
                 }
-            });
-
-        })();
+            });*/
+        
     </script>
 
 </body>

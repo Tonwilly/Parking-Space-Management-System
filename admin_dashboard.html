@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <style>
+        body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    background: #dcf0de;
+}
+
+/* Sidebar #f5f7fa*/
+/* Sidebar */
+.sidebar {
+    width: 260px;
+    background: #2b7a78;
+    padding: 1.5rem 1rem;
+    height: 100vh;
+    color: white;
+    position: fixed;
+    transform: translateX(0);
+    flex-direction: column;
+    transition: width 0.35s ease, opacity 0.35s ease;
+    overflow: hidden;
+}
+
+/* show sidebar when .open is present */
+.sidebar.open {
+    transform: translateX(0);
+}
+
+/* when sidebar is open shift main content */
+.main.shifted {
+    margin-left: 260px;
+    width: calc(100% - 260px)
+}
+
+.sidebar .logo {
+    margin: 0 0 2rem;
+    font-size: 1.7rem;
+    text-align: center;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+/* Sidebar menu */
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 1rem;
+}
+
+.sidebar ul li {
+    margin-bottom: .7rem;
+}
+
+.sidebar ul li a {
+    display: block;
+    padding: .75rem 1rem;
+    text-decoration: none;
+    color: #eafaf1;
+    font-size: 1rem;
+    border-radius: 10px; /* Rounded Rectangle */
+    transition: all 0.25s ease-in-out;
+}
+
+/* Hover effect */
+.sidebar ul li a:hover {
+    background: #3aa99f; /* Lighter shade of green */
+    color: #ffffff;
+    transform: translateX(4px); /* Slight slide effect */
+}
+
+/* Active link styling (optional) */
+.sidebar ul li a.active {
+    background: #3aa99f;
+    font-weight: bold;
+    color: #fff;
+}
+
+
+/* Main Content */
+.main {
+    
+    padding: 1rem 2rem;
+    margin-left: 260px;
+    width: calc(100% - 260px)
+}
+
+header {
+    background: #fff;
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin-left: 0;
+}
+
+#contentArea {
+    background: #fff;
+    padding: 1.5rem;
+    border-radius: 6px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    margin-left: 0;
+}
+/* Toggle Button */
+.toggle-btn {
+    font-size: 1.4rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-right: 1rem;
+    color: #2b7a78;
+}
+.toggle-btn:hover{
+    transform: scale(1.1);
+}
+
+
+
+
+
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2 class="logo">PSMS Admin</h2>
+    
+        <ul>
+            <li><a href="#" data-page="overview" class="active">Dashboard Overview</a></li>
+            <li><a href="#" data-page="lots">Parking Lots</a></li>
+            <li><a href="#" data-page="spots">Parking Spots</a></li>
+            <li><a href="#" data-page="users">Users</a></li>
+            <li><a href="#" id="logoutBtn">Logout</a></li>
+        </ul>
+    </div>
+    
+    <div class="main">
+        <header>
+            <button id="toggleSidebar" class="toggle-btn">☰</button>
+            <h1 id="pageTitle">Dashboard Overview</h1>
+        </header>
+    
+        <section id="contentArea">
+            <!-- Dynamic content will load here from admin-dashboard.js -->
+            <button id="addLotBtn">Add New Parking Lot</button>
+            <div id="lotForm" style="margin-top: 1rem; display:none;">
+                <h3>Create Parking Lot</h3>
+                <input id="lotName" placeholder="Lot Name"><br><br>
+                <input id="lotAddress" placeholder="Address"><br><br>
+                <input id="hourlyRate" type="number" placeholder="Hourly Rate"><br><br>
+                <input id="totalSpots" type="number" placeholder="Total Spots"><br><br>
+                <button id="saveLot">Save Lot</button>
+            </div>
+
+            <li><a href="create-admin.html">Create Admin</a></li>
+
+        </section>
+    </div>
+
+    <script type="module">
+        import { auth, db } from "./firebase-config.js";
+        import { createParkingLot } from "./admin.js";
+        import { createParkingSpot } from "./admin.js";
+            import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+            import { doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+            const contentArea = document.getElementById("contentArea");
+            const pageTitle = document.getElementById("pageTitle");
+            const toggleBtn = document.getElementById("toggleSidebar");
+            const sidebar = document.querySelector(".sidebar");
+            const main = document.querySelector(".main");
+
+            toggleBtn.addEventListener("click", () => {
+                    sidebar.classList.toggle("open");
+                    main.classList.toggle("shifted");
+                    console.log("Toggled sidebar");
+                });
+
+            // ROLE VALIDATION
+            onAuthStateChanged(auth, async (user) => {
+                if (!user) {
+                    window.location.href = "../login.html";
+                    return;
+                }
+
+                const snap = await getDoc(doc(db, "users", user.uid));
+                if (!snap.exists() || snap.data().role !== "admin") {
+                    alert("Access Denied.");
+                    window.location.href = "../login.html";
+                }
+            });
+
+            // SIDEBAR NAVIGATION
+            document.querySelectorAll(".sidebar a[data-page]").forEach(link => {
+                link.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    const page = link.dataset.page;
+                    loadPage(page);
+                });
+            });
+
+            // PAGE LOADER
+            async function loadPage(page) {
+                pageTitle.textContent = page.charAt(0).toUpperCase() + page.slice(1);
+
+                if (page === "overview") return loadOverview();
+                if (page === "lots") return loadLots();
+                if (page === "spots") return loadSpots(
+                    `<h2>Add Spots</h2>
+                        <input id="targetLotId" placeholder="Enter Lot ID"><br><br>
+                        <input id="spotNumber" placeholder="Spot Number (e.g., A01)"><br><br>
+                        <button id="addSpotBtn">Add Spot</button>
+                        <div id="spotMsg"></div>`
+                );
+                if (page === "users") return loadUsers();
+            }
+
+            // PAGE CONTENT FUNCTIONS
+            async function loadOverview() {
+                contentArea.innerHTML = `
+        <h2>System Summary</h2>
+        <p>Overview of Parking System performance...</p>
+    `;
+            }
+
+            async function loadLots() {
+                contentArea.innerHTML = `
+        <h2>Manage Parking Lots</h2>
+        <button onclick="window.location.href='add-lot.html'">Add New Lot</button>
+        <div id="lotsList"></div>
+    `;
+
+                const lotsRef = collection(db, "lots");
+                const lotsSnap = await getDocs(lotsRef);
+
+                let html = "<ul>";
+                lotsSnap.forEach(doc => {
+                    const lot = doc.data();
+                    html += `<li>${lot.name} — ${lot.location}</li>`;
+                });
+                html += "</ul>";
+
+                document.getElementById("lotsList").innerHTML = html;
+            }
+
+            async function loadSpots() {
+                contentArea.innerHTML = `
+        <h2>Parking Spots</h2>
+        <p>Select a lot to manage its spots.</p>
+    `;
+            }
+
+            async function loadUsers() {
+                contentArea.innerHTML = `
+        <h2>Registered Users</h2>
+    `;
+            }
+
+            document.getElementById("logoutBtn").addEventListener("click", async () => {
+                await signOut(auth);
+                window.location.href = "../login.html";
+            });
+            
+            
+
+                document.addEventListener("click", async (e) => {
+                    if (e.target.id === "addLotBtn") {
+                        document.getElementById("lotForm").style.display = "block";
+                    }
+
+                    if (e.target.id === "saveLot") {
+                        const name = document.getElementById("lotName").value.trim();
+                        const address = document.getElementById("lotAddress").value.trim();
+                        const hourlyRate = parseInt(document.getElementById("hourlyRate").value);
+                        const totalSpots = parseInt(document.getElementById("totalSpots").value);
+
+                        const lotId = await createParkingLot({ name, address, hourlyRate, totalSpots });
+                        alert("Lot created: " + lotId);
+                        loadLots(); // refresh list
+                    }
+                });
+
+                
+
+                    document.addEventListener("click", async (e) => {
+                        if (e.target.id === "addSpotBtn") {
+                            const lotId = document.getElementById("targetLotId").value.trim();
+                            const spotNumber = document.getElementById("spotNumber").value.trim();
+
+                            const spotId = await createParkingSpot({ lotId, spotNumber });
+                            document.getElementById("spotMsg").innerHTML = `Spot Created: ${spotId}`;
+                        }
+                    });
+
+            
+            
+
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <style>
+        /* Reset & body */
+            body {
+                margin: 0;
+                font-family: Arial, sans-serif;
+                display: flex;
+                background: #dcf0de;
+            }
+    
+            /* Sidebar */
+            .sidebar {
+                width: 260px;
+                background: #2b7a78;
+                padding: 1.5rem 1rem;
+                height: 100vh;
+                color: white;
+                position: fixed;
+                transform: translateX(0);
+                flex-direction: column;
+                transition: transform 0.3s ease;
+                
+                overflow-y: auto;
+                z-index: 1000;
+            }
+
+            .sidebar.open {
+    transform: translateX(0);
+}
+    
+            /* Sidebar logo */
+            .sidebar .logo {
+                margin: 0 0 2rem;
+                font-size: 1.7rem;
+                text-align: center;
+                font-weight: bold;
+            }
+    
+            /* Sidebar menu */
+            .sidebar ul {
+                list-style: none;
+                padding: 0;
+            }
+    
+            .sidebar ul li {
+                margin-bottom: 0.7rem;
+            }
+    
+            .sidebar ul li a {
+                display: block;
+                padding: 0.75rem 1rem;
+                text-decoration: none;
+                color: #eafaf1;
+                font-size: 1rem;
+                border-radius: 10px;
+                transition: all 0.25s ease-in-out;
+            }
+    
+            .sidebar ul li a:hover {
+                background: #3aa99f;
+                transform: translateX(4px);
+            }
+    
+            /* Active link */
+            .sidebar ul li a.active {
+                background: #3aa99f;
+                font-weight: bold;
+            }
+    
+            /* Main content */
+            .main {
+                padding: 1rem 2rem;
+                margin-left: 260px;
+                width: calc(100% - 260px);
+                transition: margin-left 0.3s ease;
+            }
+    
+            /* Shifted main when sidebar is closed */
+            
+    
+            /* Header */
+            header {
+                background: #fff;
+                padding: 1rem;
+                border-radius: 6px;
+                margin-bottom: 1rem;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+                display: flex;
+                align-items: center;
+                
+            }
+    
+            /* Toggle button */
+            #toggleSidebar {
+                font-size: 1.4rem;
+                background: none;
+                border: none;
+                cursor: pointer;
+                color: #2b7a78;
+                transition: transform 0.2s;
+            }
+    
+            #toggleSidebar:hover {
+                transform: scale(1.1);
+            }
+    
+            /* Content Area */
+            #contentArea {
+                background: #fff;
+                padding: 1.5rem;
+                border-radius: 6px;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            }
+    
+            /* Responsive */
+            @media (max-width: 768px) {
+                .sidebar {
+                    transform: translateX(-100%);
+                }
+    
+                .sidebar.open {
+                    transform: translateX(0);
+                    position: fixed;
+                }
+    
+                .main {
+                    margin-left: 0;
+                }
+    
+                .main.shifted {
+                    margin-left: 0;
+                }
+            }
+    </style>
+</head>
+<body>
+    
+        <!-- Sidebar -->
+        <div class="sidebar closed">
+            <h2 class="logo">PSMS Drivers</h2>
+            <ul>
+                <li><a href="#" data-page="overview" class="active">Dashboard Overview</a></li>
+                <li><a href="#" data-page="my-lots">My Parking Lots</a></li>
+                <li><a href="#" data-page="my-spots">My Parking Spots</a></li>
+                <li><a href="#" data-page="profile">Profile</a></li>
+                <li><a href="#" id="logoutBtn">Logout</a></li>
+            </ul>
+        </div>
+    
+        <!-- Main content -->
+        <div class="main shifted">
+            <header>
+                <button id="toggleSidebar">☰</button>
+                <h1 id="pageTitle">Dashboard Overview</h1>
+            </header>
+            <section id="contentArea">
+                <h2>System Summary</h2>
+                <p>Welcome to your drivers dashboard!</p>
+            </section>
+        </div>         
+        
+    <script type="module">
+        import { auth, db } from "./firebase-config.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+        const toggleBtn = document.getElementById("toggleSidebar");
+        const sidebar = document.querySelector(".sidebar");
+        const main = document.querySelector(".main");
+
+        // Toggle sidebar
+        toggleBtn.addEventListener("click", () => {
+            sidebar.classList.toggle("open");
+            sidebar.classList.toggle("closed");
+            main.classList.toggle("shifted");
+        });
+
+        // Sidebar navigation
+        document.querySelectorAll(".sidebar a[data-page]").forEach(link => {
+            link.addEventListener("click", (e) => {
+                e.preventDefault();
+                const page = link.dataset.page;
+                document.querySelectorAll(".sidebar a").forEach(l => l.classList.remove("active"));
+                link.classList.add("active");
+                loadPage(page);
+            });
+        });
+
+        // Simple page loader
+        function loadPage(page) {
+            const pageTitle = document.getElementById("pageTitle");
+            const contentArea = document.getElementById("contentArea");
+            pageTitle.textContent = page.charAt(0).toUpperCase() + page.slice(1);
+
+            switch (page) {
+                case "overview":
+                    contentArea.innerHTML = `<h2>System Summary</h2><p>Overview of your parking performance.</p>`;
+                    break;
+                case "my-lots":
+                    contentArea.innerHTML = `<h2>My Parking Lots</h2><p>List of lots you manage.</p>`;
+                    break;
+                case "my-spots":
+                    contentArea.innerHTML = `<h2>My Parking Spots</h2><p>Manage your parking spots here.</p>`;
+                    break;
+                case "profile":
+                    contentArea.innerHTML = `<h2>My Profile</h2><p>Update your profile information.</p>`;
+                    break;
+                default:
+                    contentArea.innerHTML = `<p>Page not found.</p>`;
+            }
+        }
+
+        // Logout button
+        document.getElementById("logoutBtn").addEventListener("click", () => {
+            setTimeout(() => {
+                auth.signOut().then(() => {
+                    window.location.href = "login.html";
+                });
+            }, 100);
+        });
+
+        onAuthStateChanged(auth, async user => {
+            if (!user) {
+                window.location.href = "/login.html";
+                return;
+            }
+            const udoc = await getDoc(doc(db, "users", user.uid));
+            const role = udoc.data().role;
+            if (window.location.pathname.endsWith("admin-dashboard.html") && role !== "admin") {
+                alert("Unauthorized");
+                window.location.href = "/driver-dashboard.html";
+            }
+        });
+    </script>
+</body>
+</html>
