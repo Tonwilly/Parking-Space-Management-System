@@ -1,6 +1,9 @@
 // js/booking.js
 import { db } from "./firebase-config.js";
 import { doc, runTransaction, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 /**
  * Reserve a parking spot using Firestore Transaction
