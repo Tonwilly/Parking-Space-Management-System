@@ -121,9 +121,230 @@ header {
 .toggle-btn:hover{
     transform: scale(1.1);
 }
+/* FORM CARD */
+.form-card {
+    background: #ffffff;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 450px;
+    animation: fadeIn 0.3s ease-out;
+}
 
+.form-card h3 {
+    margin-top: 0;
+    color: #2b7a78;
+    font-size: 1.3rem;
+}
 
+.form-card input {
+    width: 100%;
+    padding: .8rem;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    border: 1px solid #b2d8c5;
+    font-size: 1rem;
+}
 
+.form-card button {
+    width: 100%;
+    padding: .9rem;
+    background: #2b7a78;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: 0.2s ease;
+}
+
+.form-card button:hover {
+    background: #3aa99f;
+}
+
+/* ADD BUTTON */
+.action-btn {
+    padding: .8rem 1.2rem;
+    background: #2b7a78;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-bottom: 1rem;
+    transition: 0.2s ease;
+}
+
+.action-btn:hover {
+    background: #3aa99f;
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Content box */
+.content-box {
+    background: #ffffff;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* Top action buttons layout */
+.top-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.2rem;
+}
+
+/* Primary button */
+.btn-primary {
+    background: #2b7a78;
+    color: #fff;
+    padding: 0.7rem 1.2rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: background 0.25s;
+}
+
+.btn-primary:hover {
+    background: #3aa99f;
+}
+
+/* Secondary button */
+.btn-secondary {
+    background: #e8f7f4;
+    color: #2b7a78;
+    padding: 0.65rem 1.1rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    border: 1px solid #2b7a78;
+    transition: 0.25s;
+}
+
+.btn-secondary:hover {
+    background: #d0efea;
+}
+
+/* Form card */
+.form-card {
+    background: #f8fdfb;
+    padding: 1.4rem;
+    border-radius: 10px;
+    margin-top: 1rem;
+    border: 1px solid #d2ebe6;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+/* Hide by default */
+.hidden {
+    display: none;
+}
+
+/* Headings */
+.form-card h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: #2b7a78;
+}
+
+/* Form layout */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-row {
+    display: flex;
+    gap: 1rem;
+}
+
+/* Input styles */
+.form-card input {
+    width: 100%;
+    padding: 0.65rem;
+    border: 1px solid #c7dfda;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border 0.25s;
+}
+
+.form-card input:focus {
+    border-color: #2b7a78;
+}
+
+/* Save button */
+.btn-save {
+    background: #3aa99f;
+    color: #fff;
+    padding: 0.75rem 1.4rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.25s;
+}
+
+.btn-save:hover {
+    background: #2b7a78;
+}
+/* Main content area styling */
+#contentArea.content-box {
+    background: #ffffff;
+    padding: 1.8rem;
+    border-radius: 12px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.07);
+    min-height: 65vh;
+    margin-top: 1rem;
+}
+
+/* Layout for action buttons */
+.top-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+/* Primary (green) button */
+.btn-primary {
+    background: #2b7a78;
+    color: white;
+    padding: 0.75rem 1.3rem;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.25s;
+}
+
+.btn-primary:hover {
+    background: #3aa99f;
+    transform: translateY(-2px);
+}
+
+/* Secondary button (admin create) */
+.btn-secondary {
+    background: #e8f7f4;
+    color: #2b7a78;
+    padding: 0.72rem 1.3rem;
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: 0.95rem;
+    border: 1px solid #2b7a78;
+    transition: 0.25s;
+}
+
+.btn-secondary:hover {
+    background: #d5f2ec;
+    transform: translateY(-2px);
+}
 
 
     </style>
@@ -149,7 +370,15 @@ header {
     
         <section id="contentArea">
             <!-- Dynamic content will load here from admin-dashboard.js -->
-            <button id="addLotBtn">Add New Parking Lot</button>
+            <div class="top-actions">
+                <button id="addLotBtn" class="btn-primary">+ Add New Parking Lot</button>
+            
+                <a id="createAdmin" href="create-admin.html" class="btn-secondary">
+                    Create Admin
+                </a>
+            </div>
+
+
             <div id="lotForm" style="margin-top: 1rem; display:none;">
                 <h3>Create Parking Lot</h3>
                 <input id="lotName" placeholder="Lot Name"><br><br>
@@ -159,15 +388,14 @@ header {
                 <button id="saveLot">Save Lot</button>
             </div>
 
-            <li><a href="create-admin.html">Create Admin</a></li>
+            
 
         </section>
     </div>
 
-    <script type="module">
-        import { auth, db } from "./firebase-config.js";
-        import { createParkingLot } from "./admin.js";
-        import { createParkingSpot } from "./admin.js";
+    <script type="module" >
+        import { auth, db } from "./js/firebase-config.js";
+        import { createParkingLot, createParkingSpot } from "./js/admin.js";
             import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
             import { doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
@@ -212,13 +440,7 @@ header {
 
                 if (page === "overview") return loadOverview();
                 if (page === "lots") return loadLots();
-                if (page === "spots") return loadSpots(
-                    `<h2>Add Spots</h2>
-                        <input id="targetLotId" placeholder="Enter Lot ID"><br><br>
-                        <input id="spotNumber" placeholder="Spot Number (e.g., A01)"><br><br>
-                        <button id="addSpotBtn">Add Spot</button>
-                        <div id="spotMsg"></div>`
-                );
+                if (page === "spots") return loadSpots();
                 if (page === "users") return loadUsers();
             }
 
@@ -233,29 +455,61 @@ header {
             async function loadLots() {
                 contentArea.innerHTML = `
         <h2>Manage Parking Lots</h2>
-        <button onclick="window.location.href='add-lot.html'">Add New Lot</button>
+        <button id="showCreateLot" class="action-btn">➕ Create New Lot</button>
+
+        <div id="lotForm" class="form-card" style="display:none;">
+            <h3>Create Parking Lot</h3>
+            <input id="lotName" placeholder="Lot Name">
+            <input id="lotAddress" placeholder="Location / Address">
+            <input id="hourlyRate" type="number" placeholder="Hourly Charge (KES)">
+            <input id="totalSpots" type="number" placeholder="Total Spots">
+            <button id="saveLot">Save Lot</button>
+        </div>
+
+        <h3 style="margin-top:2rem;">Existing Lots</h3>
         <div id="lotsList"></div>
     `;
 
+                // Reveal form
+                document.getElementById("showCreateLot").onclick = () => {
+                    document.getElementById("lotForm").style.display = "block";
+                };
+
+                // Load saved lots
                 const lotsRef = collection(db, "lots");
                 const lotsSnap = await getDocs(lotsRef);
 
                 let html = "<ul>";
                 lotsSnap.forEach(doc => {
                     const lot = doc.data();
-                    html += `<li>${lot.name} — ${lot.location}</li>`;
+                    html += `<li><b>${lot.name}</b> — ${lot.address}</li>`;
                 });
                 html += "</ul>";
 
                 document.getElementById("lotsList").innerHTML = html;
             }
+            
 
             async function loadSpots() {
                 contentArea.innerHTML = `
-        <h2>Parking Spots</h2>
-        <p>Select a lot to manage its spots.</p>
+        <h2>Manage Parking Spots</h2>
+
+        <button id="showCreateSpot" class="action-btn">➕ Add Parking Spot</button>
+
+        <div id="spotForm" class="form-card" style="display:none;">
+            <h3>Create New Parking Spot</h3>
+
+            <input id="targetLotId" placeholder="Lot ID (exact)">
+            <input id="spotNumber" placeholder="Spot Number (e.g., A01)">
+            <button id="addSpotBtn">Save Spot</button>
+
+            <div id="spotMsg" style="margin-top:.7rem; font-weight:bold;"></div>
+        </div>
     `;
-            }
+
+        document.getElementById("showCreateSpot").onclick = () => {
+        document.getElementById("spotForm").style.display = "block";
+            }}
 
             async function loadUsers() {
                 contentArea.innerHTML = `
