@@ -28,16 +28,16 @@
         <div class="form-box login">
             <h2>Login</h2>
 
-            <form id="loginForm" novalidate>
+            <form id="loginForm" novalidate autocomplete="off">
                 <div class="input-box">
                     <span class="icon"><i class='bx bx-envelope'></i></span>
-                    <input id="login-email" name="email" type="email" required>
+                    <input id="login-email" name="email" type="email" required autocomplete="new-email">
                     <label for="login-email">Email</label>
                 </div>
 
                 <div class="input-box">
                     <span class="icon"><i class='bx bx-lock'></i></span>
-                    <input id="login-password" name="password" type="password" required>
+                    <input id="login-password" name="password" type="password" required autocomplete="new-password">
                     <label for="login-password">Password</label>
                 </div>
 
@@ -122,7 +122,7 @@
 
             // Redirect based on role
             if (role === "admin") {
-                window.location.href = "admin-dashboard.html";
+                window.location.href = "admin_dashboard.html";
             } else {
                 window.location.href = "driver-dashboard.html";
             }
