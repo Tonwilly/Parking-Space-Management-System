@@ -523,8 +523,9 @@ header {
         /* ---------- LOGOUT ---------- */
         document.getElementById("logoutBtn").addEventListener("click", async () => {
             try {
-                await signOut(auth);
-                window.location.href = "./login.html";
+                auth.signOut().then(() => {
+                    window.location.href = "login.html";
+                });
             } catch (err) {
                 console.error("Sign out failed:", err);
                 alert("Logout failed. Check console.");
