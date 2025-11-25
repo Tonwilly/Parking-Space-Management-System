@@ -1,5 +1,5 @@
 // admin.js
-import { db } from "./js/firebase-config.js";
+import { auth,db } from "./js/firebase-config.js";
 import {
     collection,
     doc,
