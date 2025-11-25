@@ -393,172 +393,221 @@ header {
         </section>
     </div>
 
-    <script type="module" >
+    <script type="module">
+        /* ---------- ROOT version (admin-dashboard.html at site root) ---------- */
         import { auth, db } from "./js/firebase-config.js";
-            import { createParkingLot, createParkingSpot } from "./js/admin.js";
+        import { createParkingLot, createParkingSpot } from "./js/admin.js";
 
-            import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-            import { doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+        import { doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-            
-            const contentArea = document.getElementById("contentArea");
-            const pageTitle = document.getElementById("pageTitle");
-            const toggleBtn = document.getElementById("toggleSidebar");
-            const sidebar = document.querySelector(".sidebar");
-            const main = document.querySelector(".main");
+        const contentArea = document.getElementById("contentArea");
+        const pageTitle = document.getElementById("pageTitle");
+        const toggleBtn = document.getElementById("toggleSidebar");
+        const sidebar = document.querySelector(".sidebar");
+        const main = document.querySelector(".main");
 
-            toggleBtn.addEventListener("click", () => {
-                    sidebar.classList.toggle("open");
-                    main.classList.toggle("shifted");
-                    console.log("Toggled sidebar");
-                });
+        toggleBtn.addEventListener("click", () => {
+            sidebar.classList.toggle("open");
+            main.classList.toggle("shifted");
+        });
 
-            // ROLE VALIDATION
-            onAuthStateChanged(auth, async (user) => {
-                if (!user) {
-                    window.location.href = "../login.html";
-                    return;
-                }
+        // ROLE VALIDATION
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.href = "../login.html";
+                return;
+            }
 
+            try {
                 const snap = await getDoc(doc(db, "users", user.uid));
                 if (!snap.exists() || snap.data().role !== "admin") {
                     alert("Access Denied.");
                     window.location.href = "../login.html";
                 }
-            });
-
-            // SIDEBAR NAVIGATION
-            document.querySelectorAll(".sidebar a[data-page]").forEach(link => {
-                link.addEventListener("click", (e) => {
-                    e.preventDefault();
-                    const page = link.dataset.page;
-                    loadPage(page);
-                });
-            });
-
-            // PAGE LOADER
-            async function loadPage(page) {
-                pageTitle.textContent = page.charAt(0).toUpperCase() + page.slice(1);
-
-                if (page === "overview") return loadOverview();
-                if (page === "lots") return loadLots();
-                if (page === "spots") return loadSpots();
-                if (page === "users") return loadUsers();
+            } catch (err) {
+                console.error("Role validation failed:", err);
+                // If firestore read fails, still sign out for safety
+                try { await signOut(auth); } catch (e) { }
+                window.location.href = "../login.html";
             }
+        });
 
-            // PAGE CONTENT FUNCTIONS
-            async function loadOverview() {
-                contentArea.innerHTML = `
+        // SIDEBAR NAVIGATION
+        document.querySelectorAll(".sidebar a[data-page]").forEach(link => {
+            link.addEventListener("click", (e) => {
+                e.preventDefault();
+                const page = link.dataset.page;
+                loadPage(page);
+            });
+        });
+
+        // PAGE LOADER
+        async function loadPage(page) {
+            pageTitle.textContent = page.charAt(0).toUpperCase() + page.slice(1);
+            if (page === "overview") return loadOverview();
+            if (page === "lots") return loadLots();
+            if (page === "spots") return loadSpots();
+            if (page === "users") return loadUsers();
+        }
+
+        async function loadOverview() {
+            contentArea.innerHTML = `
         <h2>System Summary</h2>
         <p>Overview of Parking System performance...</p>
-    `;
-            }
+      `;
+        }
 
-            async function loadLots() {
-                contentArea.innerHTML = `
+        async function loadLots() {
+            contentArea.innerHTML = `
         <h2>Manage Parking Lots</h2>
         <button id="showCreateLot" class="action-btn">➕ Create New Lot</button>
-
+    
         <div id="lotForm" class="form-card" style="display:none;">
-            <h3>Create Parking Lot</h3>
-            <input id="lotName" placeholder="Lot Name">
-            <input id="lotAddress" placeholder="Location / Address">
-            <input id="hourlyRate" type="number" placeholder="Hourly Charge (KES)">
-            <input id="totalSpots" type="number" placeholder="Total Spots">
-            <button id="saveLot">Save Lot</button>
+          <h3>Create Parking Lot</h3>
+          <input id="lotName" placeholder="Lot Name">
+          <input id="lotAddress" placeholder="Location / Address">
+          <input id="hourlyRate" type="number" placeholder="Hourly Charge (KES)">
+          <input id="totalSpots" type="number" placeholder="Total Spots">
+          <button id="saveLot" class="btn-save">Save Lot</button>
         </div>
-
+    
         <h3 style="margin-top:2rem;">Existing Lots</h3>
         <div id="lotsList"></div>
-    `;
+      `;
 
-                // Reveal form
-                document.getElementById("showCreateLot").onclick = () => {
-                    document.getElementById("lotForm").style.display = "block";
-                };
+            document.getElementById("showCreateLot").onclick = () => {
+                document.getElementById("lotForm").style.display = "block";
+            };
 
-                // Load saved lots
+            // Load lots
+            try {
                 const lotsRef = collection(db, "lots");
                 const lotsSnap = await getDocs(lotsRef);
-
                 let html = "<ul>";
-                lotsSnap.forEach(doc => {
-                    const lot = doc.data();
-                    html += `<li><b>${lot.name}</b> — ${lot.address}</li>`;
+                lotsSnap.forEach(d => {
+                    const lot = d.data();
+                    html += `<li><b>${escapeHtml(lot.name)}</b> — ${escapeHtml(lot.address)}</li>`;
                 });
                 html += "</ul>";
-
                 document.getElementById("lotsList").innerHTML = html;
+            } catch (err) {
+                console.error("Failed to load lots:", err);
+                document.getElementById("lotsList").innerHTML = "<p style='color:crimson'>Failed to load lots.</p>";
             }
-            
+        }
 
-            async function loadSpots() {
-                contentArea.innerHTML = `
+        async function loadSpots() {
+            contentArea.innerHTML = `
         <h2>Manage Parking Spots</h2>
-
         <button id="showCreateSpot" class="action-btn">➕ Add Parking Spot</button>
-
+    
         <div id="spotForm" class="form-card" style="display:none;">
-            <h3>Create New Parking Spot</h3>
-
-            <input id="targetLotId" placeholder="Lot ID (exact)">
-            <input id="spotNumber" placeholder="Spot Number (e.g., A01)">
-            <button id="addSpotBtn">Save Spot</button>
-
-            <div id="spotMsg" style="margin-top:.7rem; font-weight:bold;"></div>
+          <h3>Create New Parking Spot</h3>
+          <input id="targetLotId" placeholder="Lot ID (exact)">
+          <input id="spotNumber" placeholder="Spot Number (e.g., A01)">
+          <button id="addSpotBtn" class="btn-save">Save Spot</button>
+          <div id="spotMsg" style="margin-top:.7rem; font-weight:bold;"></div>
         </div>
-    `;
+      `;
 
-        document.getElementById("showCreateSpot").onclick = () => {
-        document.getElementById("spotForm").style.display = "block";
-            }}
+            document.getElementById("showCreateSpot").onclick = () => {
+                document.getElementById("spotForm").style.display = "block";
+            };
+        }
 
-            async function loadUsers() {
-                contentArea.innerHTML = `
-        <h2>Registered Users</h2>
-    `;
+        async function loadUsers() {
+            contentArea.innerHTML = `<h2>Registered Users</h2>`;
+        }
+
+        /* ---------- LOGOUT ---------- */
+        document.getElementById("logoutBtn").addEventListener("click", async () => {
+            try {
+                await signOut(auth);
+                window.location.href = "login.html";
+            } catch (err) {
+                console.error("Sign out failed:", err);
+                alert("Logout failed. Check console.");
+            }
+        });
+
+        /* ---------- SAVE LOT ---------- */
+        document.addEventListener("click", async (e) => {
+            if (e.target.id === "addLotBtn") {
+                document.getElementById("lotForm").style.display = "block";
             }
 
-            document.getElementById("logoutBtn").addEventListener("click", async () => {
-                await signOut(auth);
-                window.location.href = "../login.html";
-            });
-            
-            
+            if (e.target.id === "saveLot") {
+                // basic validation
+                const nameEl = document.getElementById("lotName");
+                const addrEl = document.getElementById("lotAddress");
+                const rateEl = document.getElementById("hourlyRate");
+                const totalEl = document.getElementById("totalSpots");
 
-                document.addEventListener("click", async (e) => {
-                    if (e.target.id === "addLotBtn") {
-                        document.getElementById("lotForm").style.display = "block";
-                    }
+                const name = nameEl.value.trim();
+                const address = addrEl.value.trim();
+                const hourlyRate = Number(rateEl.value);
+                const totalSpots = Number(totalEl.value);
 
-                    if (e.target.id === "saveLot") {
-                        const name = document.getElementById("lotName").value.trim();
-                        const address = document.getElementById("lotAddress").value.trim();
-                        const hourlyRate = parseInt(document.getElementById("hourlyRate").value);
-                        const totalSpots = parseInt(document.getElementById("totalSpots").value);
+                if (!name || !address || !hourlyRate || !totalSpots) {
+                    alert("Please fill all fields.");
+                    return;
+                }
 
-                        const lotId = await createParkingLot({ name, address, hourlyRate, totalSpots });
-                        alert("Lot created: " + lotId);
-                        loadLots(); // refresh list
-                    }
-                });
+                try {
+                    const lotId = await createParkingLot({ name, address, hourlyRate, totalSpots });
+                    alert("Lot created: " + lotId);
 
-                
+                    // clear inputs and hide form
+                    nameEl.value = "";
+                    addrEl.value = "";
+                    rateEl.value = "";
+                    totalEl.value = "";
+                    document.getElementById("lotForm").style.display = "none";
 
-                    document.addEventListener("click", async (e) => {
-                        if (e.target.id === "addSpotBtn") {
-                            const lotId = document.getElementById("targetLotId").value.trim();
-                            const spotNumber = document.getElementById("spotNumber").value.trim();
+                    // refresh list
+                    await loadLots();
+                } catch (err) {
+                    console.error("Create lot failed:", err);
+                    alert("Failed to create lot. See console.");
+                }
+            }
+        });
 
-                            const spotId = await createParkingSpot({ lotId, spotNumber });
-                            document.getElementById("spotMsg").innerHTML = `Spot Created: ${spotId}`;
-                        }
-                    });
+        /* ---------- SAVE SPOT ---------- */
+        document.addEventListener("click", async (e) => {
+            if (e.target.id === "addSpotBtn") {
+                const lotId = document.getElementById("targetLotId").value.trim();
+                const spotNumber = document.getElementById("spotNumber").value.trim();
 
-            
-            
+                if (!lotId || !spotNumber) {
+                    document.getElementById("spotMsg").innerHTML = "<span style='color:red;'>Enter all fields</span>";
+                    return;
+                }
 
+                try {
+                    const spotId = await createParkingSpot({ lotId, spotNumber });
+                    document.getElementById("spotMsg").innerHTML = `<span style='color:green;'>Spot Created: ${spotId}</span>`;
+                    document.getElementById("targetLotId").value = "";
+                    document.getElementById("spotNumber").value = "";
+                } catch (err) {
+                    console.error("Create spot failed:", err);
+                    document.getElementById("spotMsg").innerHTML = `<span style='color:crimson;'>Failed</span>`;
+                }
+            }
+        });
 
+        /* ---------- small utils ---------- */
+        function escapeHtml(str) {
+            if (str === undefined || str === null) return "";
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
     </script>
+
 </body>
 </html>

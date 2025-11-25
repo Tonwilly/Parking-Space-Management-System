@@ -40,9 +40,9 @@
 <div class="box">
     <h2>Create Admin User</h2>
 
-    <input id="adminName" type="text" placeholder="Full Name">
-    <input id="adminEmail" type="email" placeholder="Admin Email">
-    <input id="adminPassword" type="password" placeholder="Password">
+    <input id="adminName" type="text" placeholder="Full Name" autocomplete="off">
+    <input id="adminEmail" type="email" placeholder="Admin Email" autocomplete="off">
+    <input id="adminPassword" type="password" placeholder="Password" autocomplete="off">
 
     <button id="createAdminBtn">Create Admin</button>
 
@@ -50,7 +50,7 @@
 </div>
 
 <script type="module">
-    import { auth, db } from "./firebase-config.js";
+    import { auth, db } from "./js/firebase-config.js";
     import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
     import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
