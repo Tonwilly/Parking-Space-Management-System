@@ -108,6 +108,18 @@
             #toggleSidebar:hover {
                 transform: scale(1.1);
             }
+            .close-btn {
+                background: none;
+                border: none;
+                color: white;
+                font-size: 1.4rem;
+                cursor: pointer;
+                float: right;
+                margin-bottom: 1rem;
+            }
+            .close-btn:hover {
+                transform: scale(1.2);
+            }
     
             /* Content Area */
             #contentArea {
@@ -130,59 +142,63 @@
     
                 .main {
                     margin-left: 0;
+                    width: 100%;
                 }
     
                 .main.shifted {
                     margin-left: 0;
                 }
+                #toggleSidebar {
+                    display: block;
+                }
             }
             .book-btn {
-    background: #2b7a78;
-    color: white;
-    padding: 10px 16px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 1rem;
-    transition: 0.3s;
-}
-.book-btn:hover {
-    background: #3aa99f;
-}
+                background: #2b7a78;
+                color: white;
+                padding: 10px 16px;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 1rem;
+                transition: 0.3s;
+            }
+            .book-btn:hover {
+                background: #3aa99f;
+            }
 
-.booking-popup {
-    margin-top: 1rem;
-    background: #ffffff;
-    padding: 1.5rem;
-    border-radius: 10px;
-    width: 320px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.15);
-}
+            .booking-popup {
+                margin-top: 1rem;
+                background: #ffffff;
+                padding: 1.5rem;
+                border-radius: 10px;
+                width: 320px;
+                box-shadow: 0 0 10px rgba(0,0,0,0.15);
+            }
 
-.booking-popup input, .booking-popup select {
-    width: 100%;
-    padding: 8px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-}
+            .booking-popup input, .booking-popup select {
+                width: 100%;
+                padding: 8px;
+                border-radius: 8px;
+                border: 1px solid #ccc;
+            }
 
-.booking-popup button {
-    margin-top: 10px;
-    padding: 10px;
-    width: 48%;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-}
+            .booking-popup button {
+                margin-top: 10px;
+                padding: 10px;
+                width: 48%;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+            }
 
-#submitBooking {
-    background: #2b7a78;
-    color: white;
-}
+            #submitBooking {
+                background: #2b7a78;
+                color: white;
+            }
 
-#closeBooking {
-    background: #cccccc;
-}
+            #closeBooking {
+                background: #cccccc;
+            }
 
     </style>
 </head>
@@ -191,10 +207,12 @@
         <!-- Sidebar -->
         <div class="sidebar closed">
             <h2 class="logo">PSMS Drivers</h2>
+            <button id="closeSidebar" class="close-btn">✕</button>
+
             <ul>
                 <li><a href="#" data-page="overview" class="active">Dashboard Overview</a></li>
-                <li><a href="#" data-page="my-lots">My Parking Lots</a></li>
-                <li><a href="#" data-page="my-spots">My Parking Spots</a></li>
+                <li><a href="#" data-page="my-lots">Parking Lots</a></li>
+                <li><a href="#" data-page="my-spots">Parking Spots</a></li>
                 <li><a href="#" data-page="profile">Profile</a></li>
                 <li><a href="#" id="logoutBtn">Logout</a></li>
             </ul>
@@ -203,7 +221,7 @@
         <!-- Main content -->
         <div class="main shifted">
             <header>
-                <button id="toggleSidebar">☰</button>
+                <button id="toggleSidebar" style="display: none;">☰</button>
                 <h1 id="pageTitle">Dashboard Overview</h1>
             </header>
             <section id="contentArea">
@@ -231,6 +249,15 @@
         sidebar.classList.toggle("closed");
         main.classList.toggle("shifted");
     });
+
+    const closeBtn = document.getElementById("closeSidebar");
+
+        closeBtn.addEventListener("click", () => {
+            sidebar.classList.add("closed");
+            sidebar.classList.remove("open");
+            main.classList.remove("shifted");
+        });
+
 
     // Sidebar navigation
     document.querySelectorAll(".sidebar a[data-page]").forEach(link => {
@@ -343,6 +370,42 @@
                 contentArea.innerHTML = `<p>Page not found.</p>`;
     }
     }
+    async function loadBookingLots() {
+            const lotSelect = document.getElementById("bookingLot");
+
+            const lotsSnap = await getDocs(collection(db, "lots"));
+            lotSelect.innerHTML = `<option value="">Select a parking lot</option>`;
+
+            lotsSnap.forEach(lot => {
+                const data = lot.data();
+                lotSelect.innerHTML += `
+            <option value="${lot.id}">
+                ${data.name} — ${data.address}
+            </option>`;
+            });
+
+            // LOAD SPOTS when a new lot is selected
+            lotSelect.addEventListener("change", async () => {
+                const lotId = lotSelect.value;
+                if (!lotId) return;
+
+                const spotSelect = document.getElementById("bookingSpot");
+                const spotsSnap = await getDocs(collection(db, `lots/${lotId}/spots`));
+
+                spotSelect.innerHTML = `<option value="">Select a spot</option>`;
+
+                spotsSnap.forEach(spot => {
+                    const spotData = spot.data();
+                    if (spotData.status === "available") {
+                        spotSelect.innerHTML += `
+                    <option value="${spot.id}">
+                        ${spotData.spotNumber}
+                    </option>`;
+                    }
+                });
+            });
+        }
+
 
     // Logout button
     document.getElementById("logoutBtn").addEventListener("click", () => {
