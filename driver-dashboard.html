@@ -297,7 +297,7 @@ import { getFirestore } from "https://www.gstatic.com/firebasejs/10.14.1/firebas
             ">
                 <h3 style="margin:0;">${data.name}</h3>
                 <p>${data.address}</p>
-                <button class="book-btn" onclick="loadDriverSpots('${l.id}')">View Spots</button>
+                <button class="book-btn" onclick="loadDriverSpots('${lot.id}')">View Spots</button>
             </div>
         `;
                         });
@@ -326,7 +326,7 @@ import { getFirestore } from "https://www.gstatic.com/firebasejs/10.14.1/firebas
             ">
                 <h3>${d.spotNumber}</h3>
                 <p>Status: ${d.status}</p>
-                <button class="book-btn" onclick="openSpotBooking('${lotId}','${s.id}')">
+                <button class="book-btn" onclick="openSpotBooking('${lotId}','${spot.id}')">
                     Book Spot
                 </button>
             </div>
