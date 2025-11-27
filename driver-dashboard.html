@@ -116,7 +116,7 @@
                 cursor: pointer;
                 float: right;
                 margin: 0 0 2rem;
-                
+
             }
             .close-btn:hover {
                 transform: scale(1.2);
@@ -207,8 +207,9 @@
     
         <!-- Sidebar -->
         <div class="sidebar closed">
-            <h2 class="logo">PSMS Drivers</h2>
             <button id="closeSidebar" class="close-btn">✕</button>
+            <h2 class="logo">PSMS Drivers</h2>
+            
 
             <ul>
                 <li><a href="#" data-page="overview" class="active">Dashboard Overview</a></li>
@@ -307,32 +308,47 @@
                 loadBookingLots();
             break;
             case "my-lots":
-                window.loadDriverSpots = async function (lotId) {
+                loadDriverLots();
+                async function loadDriverLots() {
                     const contentArea = document.getElementById("contentArea");
-                    const spotsSnap = await getDocs(collection(db, `lots/${lotId}/spots`));
 
-                    let html = `<h2>Available Spots</h2><div style="display:flex;gap:1rem;flex-wrap:wrap;">`;
+                    contentArea.innerHTML = `<h2>Parking Lots</h2>Loading...`;
 
-                    spotsSnap.forEach(s => {
-                        const d = s.data();
-                        html += `
-                            <div style="
-                                padding:1rem;background:#fff;border-radius:10px;
-                                width:150px;box-shadow:0 0 6px rgba(0,0,0,0.1)">
-                                <h3>${d.spotNumber}</h3>
-                                <p>Status: ${d.status}</p>
-                                <button class="book-btn" onclick="openSpotBooking('${lotId}','${s.id}')">
-                                    Book Spot
-                                </button>
-                            </div>
-                        `;
-                    });
+                    try {
+                        const lotsSnap = await getDocs(collection(db, "lots"));
 
-                    html += "</div>";
-                    contentArea.innerHTML = html;
-                };
+                        if (lotsSnap.empty) {
+                            contentArea.innerHTML = `<h2>Parking Lots</h2><p>No parking lots available.</p>`;
+                            return;
+                        }
 
+                        let html = `<h2>Parking Lots</h2>
+                    <div style="display:flex;gap:1rem;flex-wrap:wrap;">`;
 
+                        lotsSnap.forEach(l => {
+                            const data = l.data();
+                            html += `
+                <div style="
+                    background:#fff;padding:1rem;border-radius:10px;
+                    width:200px;box-shadow:0 0 6px rgba(0,0,0,0.1);">
+                    <h3 style="margin:0;">${data.name}</h3>
+                    <p>${data.address}</p>
+                    <button class="book-btn" onclick="loadDriverSpots('${l.id}')">
+                        View Spots
+                    </button>
+                </div>
+            `;
+                        });
+
+                        html += "</div>";
+
+                        contentArea.innerHTML = html;
+
+                    } catch (err) {
+                        console.error("Error loading lots:", err);
+                        contentArea.innerHTML = `<p>Error loading parking lots.</p>`;
+                    }
+                }
 
             break;
 
@@ -352,7 +368,7 @@
                                 width:150px;box-shadow:0 0 6px rgba(0,0,0,0.1)">
                                 <h3>${d.spotNumber}</h3>
                                 <p>Status: ${d.status}</p>
-                                <button class="book-btn" onclick="openSpotBooking('${lotId}','${spot.id}')">
+                                <button class="book-btn" onclick="openSpotBooking('${s.id}'}','${spot.id}')">
                                     Book Spot
                                 </button>
                             </div>
