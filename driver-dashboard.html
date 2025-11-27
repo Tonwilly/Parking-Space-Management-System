@@ -212,169 +212,160 @@
             </section>
         </div>         
         
-    <script type="module">
-        import { auth, db } from "./js/firebase-config.js";
-        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-        import { doc, getDoc, collection, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-        
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+<script type="module">
+    import { auth, db } from "./js/firebase-config.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import { doc, getDoc, collection, onSnapshot, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+    
+    import { getAuth } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 
-        const toggleBtn = document.getElementById("toggleSidebar");
-        const sidebar = document.querySelector(".sidebar");
-        const main = document.querySelector(".main");
+    const toggleBtn = document.getElementById("toggleSidebar");
+    const sidebar = document.querySelector(".sidebar");
+    const main = document.querySelector(".main");
 
-        // Toggle sidebar
-        toggleBtn.addEventListener("click", () => {
-            sidebar.classList.toggle("open");
-            sidebar.classList.toggle("closed");
-            main.classList.toggle("shifted");
+    // Toggle sidebar
+    toggleBtn.addEventListener("click", () => {
+        sidebar.classList.toggle("open");
+        sidebar.classList.toggle("closed");
+        main.classList.toggle("shifted");
+    });
+
+    // Sidebar navigation
+    document.querySelectorAll(".sidebar a[data-page]").forEach(link => {
+        link.addEventListener("click", (e) => {
+            e.preventDefault();
+            const page = link.dataset.page;
+            document.querySelectorAll(".sidebar a").forEach(l => l.classList.remove("active"));
+            link.classList.add("active");
+            loadPage(page);
         });
+    });
 
-        // Sidebar navigation
-        document.querySelectorAll(".sidebar a[data-page]").forEach(link => {
-            link.addEventListener("click", (e) => {
-                e.preventDefault();
-                const page = link.dataset.page;
-                document.querySelectorAll(".sidebar a").forEach(l => l.classList.remove("active"));
-                link.classList.add("active");
-                loadPage(page);
-            });
-        });
+    // Simple page loader
+    function loadPage(page) {
+        const pageTitle = document.getElementById("pageTitle");
+        const contentArea = document.getElementById("contentArea");
+        pageTitle.textContent = page.charAt(0).toUpperCase() + page.slice(1);
 
-        // Simple page loader
-        function loadPage(page) {
-            const pageTitle = document.getElementById("pageTitle");
-            const contentArea = document.getElementById("contentArea");
-            pageTitle.textContent = page.charAt(0).toUpperCase() + page.slice(1);
+        switch (page) {
+            case "overview":
+                contentArea.innerHTML = `
+                    <h2>System Summary</h2>
+                    <p>Welcome to your drivers dashboard!</p>
+                    <button id="bookNowBtn" class="book-btn">Book a Parking Spot</button>
+                    <div id="bookingForm" class="booking-popup" style="display:none;">
+                        <h3>Book a Parking Spot</h3>
 
-            switch (page) {
-                case "overview":
-                    contentArea.innerHTML = `
-        <h2>System Summary</h2>
-        <p>Welcome to your drivers dashboard!</p>
-        <button id="bookNowBtn" class="book-btn">Book a Parking Spot</button>
-        <div id="bookingForm" class="booking-popup" style="display:none;">
-            <h3>Book a Parking Spot</h3>
+                        <label>Select Lot:</label>
+                        <select id="bookingLot"></select><br><br>
 
-            <label>Select Lot:</label>
-            <select id="bookingLot"></select><br><br>
+                        <label>Select Spot:</label>
+                        <select id="bookingSpot"></select><br><br>
 
-            <label>Select Spot:</label>
-            <select id="bookingSpot"></select><br><br>
+                        <label>Start Time:</label>
+                        <input type="datetime-local" id="startTime"><br><br>
 
-            <label>Start Time:</label>
-            <input type="datetime-local" id="startTime"><br><br>
+                        <label>End Time:</label>
+                        <input type="datetime-local" id="endTime"><br><br>
 
-            <label>End Time:</label>
-            <input type="datetime-local" id="endTime"><br><br>
+                        <button id="submitBooking">Confirm Booking</button>
+                        <button id="closeBooking">Cancel</button>
 
-            <button id="submitBooking">Confirm Booking</button>
-            <button id="closeBooking">Cancel</button>
+                        <p id="bookingMsg"></p>
+                    </div>
+                `;
+                loadBookingLots();
+            break;
+            case "my-lots":
+                window.loadDriverSpots = async function (lotId) {
+                    const contentArea = document.getElementById("contentArea");
+                    const spotsSnap = await getDocs(collection(db, `lots/${lotId}/spots`));
 
-            <p id="bookingMsg"></p>
-        </div>
-    `;
-                    loadBookingLots();
-                    break;
-                case "my-lots":
-                    loadDriverLots();
-                    async function loadDriverLots() {
-                        const contentArea = document.getElementById("contentArea");
-                        contentArea.innerHTML = `<h2>Parking Lots</h2>`;
+                    let html = `<h2>Available Spots</h2><div style="display:flex;gap:1rem;flex-wrap:wrap;">`;
 
-                        const lots = await getDocs(collection(db, "lots"));
-
-                        let html = `<div style="display:flex;gap:1rem;flex-wrap:wrap;">`;
-
-                        lots.forEach(l => {
-                            const data = l.data();
-                            html += `
-            <div style="
-                background:#fff;padding:1rem;border-radius:10px;
-                width:200px;box-shadow:0 0 6px rgba(0,0,0,0.1);
-            ">
-                <h3 style="margin:0;">${data.name}</h3>
-                <p>${data.address}</p>
-                <button class="book-btn" onclick="loadDriverSpots('${lot.id}')">View Spots</button>
-            </div>
-        `;
-                        });
-
-                        html += "</div>";
-
-                        contentArea.innerHTML = html;
-                    }
-
-                    break;
-
-                    
-                case "my-spots":
-                    window.loadDriverSpots = async function (lotId) {
-                        const contentArea = document.getElementById("contentArea");
-                        const spots = await getDocs(collection(db, `lots/${lotId}/spots`));
-
-                        let html = `<h2>Available Spots</h2><div style="display:flex;gap:1rem;flex-wrap:wrap;">`;
-
-                        spots.forEach(s => {
-                            const d = s.data();
-                            html += `
+                    spotsSnap.forEach(s => {
+                        const d = s.data();
+                        html += `
             <div style="
                 padding:1rem;background:#fff;border-radius:10px;
-                width:150px;box-shadow:0 0 6px rgba(0,0,0,0.1)
-            ">
+                width:150px;box-shadow:0 0 6px rgba(0,0,0,0.1)">
                 <h3>${d.spotNumber}</h3>
                 <p>Status: ${d.status}</p>
-                <button class="book-btn" onclick="openSpotBooking('${lotId}','${spot.id}')">
+                <button class="book-btn" onclick="openSpotBooking('${lotId}','${s.id}')">
                     Book Spot
                 </button>
             </div>
         `;
-                        });
+                    });
 
-                        html += "</div>";
-                        contentArea.innerHTML = html;
-                    };
+                    html += "</div>";
+                    contentArea.innerHTML = html;
+                };
 
-                    break;
-                case "profile":
-                    contentArea.innerHTML = `<h2>My Profile</h2><p>Update your profile information.</p>`;
-                    break;
-                default:
-                    contentArea.innerHTML = `<p>Page not found.</p>`;
-            }
-        }
 
-        // Logout button
-        document.getElementById("logoutBtn").addEventListener("click", () => {
-            setTimeout(() => {
-                auth.signOut().then(() => {
-                    window.location.href = "login.html";
-                });
-            }, 100);
-        });
 
-        onAuthStateChanged(auth, async user => {
-            if (!user) {
-                window.location.href = "/login.html";
-                return;
-            }
-            const udoc = await getDoc(doc(db, "users", user.uid));
-            const role = udoc.data().role;
-            if (window.location.pathname.endsWith("admin-dashboard.html") && role !== "admin") {
-                alert("Unauthorized");
-                window.location.href = "/driver-dashboard.html";
-            }
-        });
+            break;
 
-        const spotsRef = collection(db, `parkingLots/${lot.id}/spots`);
-            const q = query(spotsRef);
-            onSnapshot(q, (snapshot) => {
-                const spots = [];
-                snapshot.forEach(doc => spots.push({ id: doc.id, ...doc.data() }));
-                renderSpots(spots); // update UI
+                
+            case "my-spots":
+                window.loadDriverSpots = async function (lotId) {
+                    const contentArea = document.getElementById("contentArea");
+                    const spots = await getDocs(collection(db, `lots/${lotId}/spots`));
+
+                    let html = `<h2>Available Spots</h2><div style="display:flex;gap:1rem;flex-wrap:wrap;">`;
+
+                    spots.forEach(s => {
+                        const d = s.data();
+                        html += `
+                            <div style="
+                                padding:1rem;background:#fff;border-radius:10px;
+                                width:150px;box-shadow:0 0 6px rgba(0,0,0,0.1)">
+                                <h3>${d.spotNumber}</h3>
+                                <p>Status: ${d.status}</p>
+                                <button class="book-btn" onclick="openSpotBooking('${lotId}','${spot.id}')">
+                                    Book Spot
+                                </button>
+                            </div>
+                        `;
+                    });
+
+                    html += "</div>";
+                    contentArea.innerHTML = html;
+                };
+
+            break;
+            case "profile":
+                contentArea.innerHTML = `<h2>My Profile</h2><p>Update your profile information.</p>`;
+                break;
+            default:
+                contentArea.innerHTML = `<p>Page not found.</p>`;
+    }
+    }
+
+    // Logout button
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+        setTimeout(() => {
+            auth.signOut().then(() => {
+                window.location.href = "login.html";
             });
-    </script>
+        }, 100);
+    });
+
+    onAuthStateChanged(auth, async user => {
+        if (!user) {
+            window.location.href = "/login.html";
+            return;
+        }
+        const udoc = await getDoc(doc(db, "users", user.uid));
+        const role = udoc.data().role;
+        if (window.location.pathname.endsWith("admin-dashboard.html") && role !== "admin") {
+            alert("Unauthorized");
+            window.location.href = "/driver-dashboard.html";
+        }
+    });
+
+</script>
 </body>
 </html>
