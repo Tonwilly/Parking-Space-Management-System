@@ -368,7 +368,7 @@ import { getFirestore } from "https://www.gstatic.com/firebasejs/10.14.1/firebas
             }
         });
 
-        const spotsRef = collection(db, `parkingLots/${lotId}/spots`);
+        const spotsRef = collection(db, `parkingLots/${lot.id}/spots`);
             const q = query(spotsRef);
             onSnapshot(q, (snapshot) => {
                 const spots = [];
