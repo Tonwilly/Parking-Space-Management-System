@@ -406,6 +406,8 @@ header {
         const toggleBtn = document.getElementById("toggleSidebar");
         const sidebar = document.querySelector(".sidebar");
         const main = document.querySelector(".main");
+        const MASTER_ADMIN = "VwVa8tOca9PlE8xpAyVbxyTeEP53";
+        const createAdminBtn = document.getElementById("createAdmin");
 
         toggleBtn.addEventListener("click", () => {
             sidebar.classList.toggle("open");
@@ -424,11 +426,17 @@ header {
                 if (!snap.exists() || snap.data().role !== "admin") {
                     alert("Access Denied.");
                     window.location.href = "../login.html";
+                    return;
                 }
+
+                // Hide create admin button
+                if (user.uid !== MASTER_ADMIN) {
+                    createAdminBtn.style.display = "none";
+                }
+
             } catch (err) {
                 console.error("Role validation failed:", err);
-                // If firestore read fails, still sign out for safety
-                try { await signOut(auth); } catch (e) { }
+                await signOut(auth);
                 window.location.href = "../login.html";
             }
         });
@@ -469,6 +477,8 @@ header {
           <input id="lotAddress" placeholder="Location / Address">
           <input id="hourlyRate" type="number" placeholder="Hourly Charge (KES)">
           <input id="totalSpots" type="number" placeholder="Total Spots">
+          <input id="spotPrefix" placeholder="Spot Letter Prefix (e.g., A)">
+          <input id="spotCount" type="number" placeholder="Number of Spots (5-30)">
           <button id="saveLot" class="btn-save">Save Lot</button>
         </div>
     
@@ -539,40 +549,61 @@ header {
             }
 
             if (e.target.id === "saveLot") {
-                // basic validation
-                const nameEl = document.getElementById("lotName");
-                const addrEl = document.getElementById("lotAddress");
-                const rateEl = document.getElementById("hourlyRate");
-                const totalEl = document.getElementById("totalSpots");
+                const name = document.getElementById("lotName").value.trim();
+                const address = document.getElementById("lotAddress").value.trim();
+                const hourlyRate = Number(document.getElementById("hourlyRate").value);
+                const prefix = document.getElementById("spotPrefix").value.trim().toUpperCase();
+                const spotCount = Number(document.getElementById("spotCount").value);
 
-                const name = nameEl.value.trim();
-                const address = addrEl.value.trim();
-                const hourlyRate = Number(rateEl.value);
-                const totalSpots = Number(totalEl.value);
-
-                if (!name || !address || !hourlyRate || !totalSpots) {
+                if (!name || !address || !hourlyRate || !prefix || !spotCount) {
                     alert("Please fill all fields.");
                     return;
                 }
 
+                if (!/^[A-Z]$/.test(prefix)) {
+                    alert("Spot prefix must be a single A–Z letter.");
+                    return;
+                }
+
+                if (spotCount < 5 || spotCount > 30) {
+                    alert("Spot count must be between 5 and 30.");
+                    return;
+                }
+
                 try {
-                    const lotId = await createParkingLot({ name, address, hourlyRate, totalSpots });
-                    alert("Lot created: " + lotId);
+                    // 1. Create parking lot
+                    const lotId = await createParkingLot({
+                        name,
+                        address,
+                        hourlyRate,
+                        totalSpots: spotCount,
+                        prefix
+                    });
 
-                    // clear inputs and hide form
-                    nameEl.value = "";
-                    addrEl.value = "";
-                    rateEl.value = "";
-                    totalEl.value = "";
+                    // 2. Auto-create parking spots with naming system
+                    for (let i = 1; i <= spotCount; i++) {
+                        const spotNumber = prefix + String(i).padStart(2, "0");
+                        await createParkingSpot({ lotId, spotNumber });
+                    }
+
+                    alert(`Parking Lot Created with ${spotCount} spots.`);
+
+                    // Reset Inputs
+                    document.getElementById("lotName").value = "";
+                    document.getElementById("lotAddress").value = "";
+                    document.getElementById("hourlyRate").value = "";
+                    document.getElementById("spotPrefix").value = "";
+                    document.getElementById("spotCount").value = "";
+
                     document.getElementById("lotForm").style.display = "none";
+                    loadLots();
 
-                    // refresh list
-                    await loadLots();
                 } catch (err) {
-                    console.error("Create lot failed:", err);
-                    alert("Failed to create lot. See console.");
+                    console.error(err);
+                    alert("Error creating lot and spots.");
                 }
             }
+
         });
 
         /* ---------- SAVE SPOT ---------- */
