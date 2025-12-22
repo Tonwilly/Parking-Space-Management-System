@@ -215,6 +215,7 @@
                 <li><a href="#" data-page="overview" class="active">Dashboard Overview</a></li>
                 <li><a href="#" data-page="my-lots">Parking Lots</a></li>
                 <li><a href="#" data-page="my-spots">Parking Spots</a></li>
+                <li><a href="#" data-page="my-bookings">My Bookings</a></li>
                 <li><a href="#" data-page="profile">Profile</a></li>
                 <li><a href="#" id="logoutBtn">Logout</a></li>
             </ul>
@@ -235,8 +236,8 @@
 <script type="module">
     import { auth, db } from "./js/firebase-config.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-    import { doc, getDoc, collection, onSnapshot, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-    
+    import { addDoc,updateDoc,getDoc,getDocs,collection,query,where,doc} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
     import { getAuth } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
     import { getFirestore } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
@@ -306,6 +307,49 @@
                     </div>
                 `;
                 loadBookingLots();
+
+                setTimeout(() => {
+                    document.getElementById("submitBooking").addEventListener("click", async () => {
+                        const lotId = bookingLot.value;
+                        const spotId = bookingSpot.value;
+                        const start = startTime.value;
+                        const end = endTime.value;
+                        const msg = document.getElementById("bookingMsg");
+
+                        if (!lotId || !spotId || !start || !end) {
+                            msg.textContent = "All fields are required.";
+                            msg.style.color = "red";
+                            return;
+                        }
+
+                        try {
+                            const user = auth.currentUser;
+
+                            await addDoc(collection(db, "bookings"), {
+                                userId: user.uid,
+                                lotId,
+                                spotId,
+                                startTime: start,
+                                endTime: end,
+                                status: "active",
+                                createdAt: new Date()
+                            });
+
+                            // Update spot status
+                            await updateDoc(doc(db, `lots/${lotId}/spots/${spotId}`), {
+                                status: "booked"
+                            });
+
+                            msg.textContent = "Booking successful!";
+                            msg.style.color = "green";
+
+                        } catch (err) {
+                            msg.textContent = err.message;
+                            msg.style.color = "red";
+                        }
+                    });
+                }, 200);
+
             break;
             case "my-lots":
                 loadDriverLots();
@@ -368,7 +412,7 @@
                                 width:150px;box-shadow:0 0 6px rgba(0,0,0,0.1)">
                                 <h3>${d.spotNumber}</h3>
                                 <p>Status: ${d.status}</p>
-                                <button class="book-btn" onclick="openSpotBooking('${s.id}'}','${spot.id}')">
+                                <button class="book-btn" onclick="openSpotBooking('${lotId}','${s.id}')">
                                     Book Spot
                                 </button>
                             </div>
@@ -383,45 +427,212 @@
             case "profile":
                 contentArea.innerHTML = `<h2>My Profile</h2><p>Update your profile information.</p>`;
                 break;
+            case "my-bookings":
+                contentArea.innerHTML = `
+                <h2>My Bookings</h2>
+                <p>View and manage your bookings.</p>`;
+                <div id="bookingsList">Loading...</div>
+                loadMyBookings();
+                break;
+
             default:
                 contentArea.innerHTML = `<p>Page not found.</p>`;
     }
     }
     async function loadBookingLots() {
-            const lotSelect = document.getElementById("bookingLot");
+            window.openSpotBooking = async function (lotId, spotId) {
+            loadPage("overview");
 
-            const lotsSnap = await getDocs(collection(db, "lots"));
-            lotSelect.innerHTML = `<option value="">Select a parking lot</option>`;
-
-            lotsSnap.forEach(lot => {
-                const data = lot.data();
-                lotSelect.innerHTML += `
-            <option value="${lot.id}">
-                ${data.name} — ${data.address}
-            </option>`;
-            });
-
-            // LOAD SPOTS when a new lot is selected
-            lotSelect.addEventListener("change", async () => {
-                const lotId = lotSelect.value;
-                if (!lotId) return;
-
+            setTimeout(async () => {
+                const lotSelect = document.getElementById("bookingLot");
                 const spotSelect = document.getElementById("bookingSpot");
-                const spotsSnap = await getDocs(collection(db, `lots/${lotId}/spots`));
+                const bookingForm = document.getElementById("bookingForm");
 
+                lotSelect.value = lotId;
+                bookingForm.style.display = "block";
+
+                const spotsSnap = await getDocs(collection(db, `lots/${lotId}/spots`));
                 spotSelect.innerHTML = `<option value="">Select a spot</option>`;
 
-                spotsSnap.forEach(spot => {
-                    const spotData = spot.data();
-                    if (spotData.status === "available") {
+                spotsSnap.forEach(s => {
+                    const d = s.data();
+                    if (d.status === "available") {
                         spotSelect.innerHTML += `
-                    <option value="${spot.id}">
-                        ${spotData.spotNumber}
-                    </option>`;
+                    <option value="${s.id}" ${s.id === spotId ? "selected" : ""}>
+                        ${d.spotNumber}
+                    </option>
+                `;
                     }
                 });
+            }, 200);
+            };
+
+            bookingsSnap.forEach(docSnap => {
+                const booking = docSnap.data();
+                const bookingId = docSnap.id;
+
+                html += `
+            <div style="
+                background:#fff;
+                padding:1rem;
+                border-radius:10px;
+                box-shadow:0 0 6px rgba(0,0,0,0.1);
+                margin-bottom:1rem;
+            ">
+                <p><b>Lot:</b> ${booking.lotId}</p>
+                <p><b>Spot:</b> ${booking.spotId}</p>
+                <p><b>Start:</b> ${new Date(booking.startTime).toLocaleString()}</p>
+                <p><b>End:</b> ${new Date(booking.endTime).toLocaleString()}</p>
+                <p><b>Status:</b> ${booking.status}</p>
+
+                ${booking.status === "active"
+                        ? `<button class="book-btn"
+                            onclick="cancelBooking(
+                                '${bookingId}',
+                                '${booking.lotId}',
+                                '${booking.spotId}'
+                            )">
+                            Cancel Booking
+                        </button>`
+                        : ""
+                    }
+            </div>
+            `;
             });
+            bookingsSnap.forEach(docSnap => {
+                const booking = docSnap.data();
+                const bookingId = docSnap.id;
+
+                // AUTO COMPLETE CHECK
+                autoCompleteBooking(bookingId, booking);
+
+                // then render booking UI
+            });
+
+
         }
+
+        document.addEventListener("click", async (e) => {
+            if (e.target.id !== "submitBooking") return;
+
+            const lotId = document.getElementById("bookingLot").value;
+            const spotId = document.getElementById("bookingSpot").value;
+            const startVal = document.getElementById("startTime").value;
+            const endVal = document.getElementById("endTime").value;
+            const bookingMsg = document.getElementById("bookingMsg");
+
+            if (!lotId || !spotId || !startVal || !endVal) {
+                bookingMsg.textContent = "Please complete all fields.";
+                return;
+            }
+
+            const startTime = new Date(startVal);
+            const endTime = new Date(endVal);
+
+            if (endTime <= startTime) {
+                bookingMsg.textContent = "End time must be after start time.";
+                return;
+            }
+
+            try {
+                /* --------- DOUBLE BOOKING PREVENTION --------- */
+                const spotRef = doc(db, `lots/${lotId}/spots`, spotId);
+                const spotSnap = await getDoc(spotRef);
+
+                if (!spotSnap.exists()) {
+                    bookingMsg.textContent = "Spot does not exist.";
+                    return;
+                }
+
+                if (spotSnap.data().status !== "available") {
+                    bookingMsg.textContent = "This spot is already booked.";
+                    return;
+                }
+
+                /* --------- CHECK ACTIVE BOOKINGS --------- */
+                const activeBookingQuery = query(
+                    collection(db, "bookings"),
+                    where("spotId", "==", spotId),
+                    where("status", "==", "active")
+                );
+
+                const activeBookings = await getDocs(activeBookingQuery);
+
+                if (!activeBookings.empty) {
+                    bookingMsg.textContent = "Spot already has an active booking.";
+                    return;
+                }
+
+                /* --------- CREATE BOOKING --------- */
+                await addDoc(collection(db, "bookings"), {
+                    userId: auth.currentUser.uid,
+                    lotId,
+                    spotId,
+                    startTime: startTime.toISOString(),
+                    endTime: endTime.toISOString(),
+                    status: "active",
+                    createdAt: new Date().toISOString()
+                });
+
+                /* --------- LOCK SPOT --------- */
+                await updateDoc(spotRef, {
+                    status: "booked"
+                });
+
+                bookingMsg.style.color = "green";
+                bookingMsg.textContent = "Booking confirmed successfully.";
+
+            } catch (err) {
+                console.error("Booking failed:", err);
+                bookingMsg.textContent = "Booking failed. Try again.";
+            }
+        });
+
+        window.cancelBooking = async function (bookingId, lotId, spotId) {
+            const bookingRef = doc(db, "bookings", bookingId);
+            const snap = await getDoc(bookingRef);
+
+            if (!snap.exists()) {
+                alert("Booking not found.");
+                return;
+            }
+
+            const booking = snap.data();
+            const now = new Date();
+            const startTime = new Date(booking.startTime);
+
+            /* --------- PREVENT LATE CANCELLATION --------- */
+            if (now >= startTime) {
+                alert("You cannot cancel a booking after it has started.");
+                return;
+            }
+
+            if (booking.status !== "active") {
+                alert("This booking is no longer active.");
+                return;
+            }
+
+            if (!confirm("Cancel this booking?")) return;
+
+            try {
+                await updateDoc(bookingRef, {
+                    status: "cancelled",
+                    cancelledAt: new Date().toISOString()
+                });
+
+                await updateDoc(doc(db, `lots/${lotId}/spots`, spotId), {
+                    status: "available"
+                });
+
+                alert("Booking cancelled.");
+                loadMyBookings();
+
+            } catch (err) {
+                console.error("Cancellation failed:", err);
+                alert("Failed to cancel booking.");
+            }
+        };
+
 
 
     // Logout button
@@ -445,6 +656,84 @@
             window.location.href = "/driver-dashboard.html";
         }
     });
+
+    /*async function loadMyBookings() {
+            const contentArea = document.getElementById("contentArea");
+
+            const user = auth.currentUser;
+            if (!user) return;
+
+            const q = query(
+                collection(db, "bookings"),
+                where("userId", "==", user.uid)
+            );
+
+            const snap = await getDocs(q);
+
+            if (snap.empty) {
+                contentArea.innerHTML = `
+            <h2>My Bookings</h2>
+            <p>You have no bookings.</p>
+        `;
+                return;
+            }
+
+            let html = `<h2>My Bookings</h2>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;">`;
+
+            snap.forEach(docSnap => {
+                const b = docSnap.data();
+
+                html += `
+            <div style="
+                background:#fff;
+                padding:1rem;
+                width:220px;
+                border-radius:10px;
+                box-shadow:0 0 6px rgba(0,0,0,.1)
+            ">
+                <h4>Spot: ${b.spotNumber}</h4>
+                <p>Status: <b>${b.status}</b></p>
+                <p>From: ${new Date(b.startTime).toLocaleString()}</p>
+                <p>To: ${new Date(b.endTime).toLocaleString()}</p>
+
+                ${b.status === "active"
+                        ? `<button class="book-btn"
+                        onclick="cancelBooking('${docSnap.id}',
+                        '${b.lotId}',
+                        '${b.spotId}')">
+                        Cancel Booking
+                       </button>`
+                        : ""
+                    }
+            </div>
+        `;
+            });
+
+            html += "</div>";
+            contentArea.innerHTML = html;
+        }*/
+
+        
+    async function autoCompleteBooking(bookingId, bookingData) {
+            if (bookingData.status !== "active") return;
+
+            const now = new Date();
+            const endTime = new Date(bookingData.endTime); // ✅ FIX
+
+            if (now >= endTime) {
+                await updateDoc(doc(db, "bookings", bookingId), {
+                    status: "completed",
+                    completedAt: new Date().toISOString()
+                });
+
+                // release spot
+                await updateDoc(
+                    doc(db, `lots/${bookingData.lotId}/spots/${bookingData.spotId}`),
+                    { status: "available" }
+                );
+            }
+        }
 
 </script>
 </body>
