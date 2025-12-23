@@ -357,6 +357,10 @@ header {
             <li><a href="#" data-page="overview" class="active">Dashboard Overview</a></li>
             <li><a href="#" data-page="lots">Parking Lots</a></li>
             <li><a href="#" data-page="spots">Parking Spots</a></li>
+            <li><a href="#" data-page="spots">Spot Availability</a></li>
+            <li><a href="#" data-page="active-bookings">Active Bookings</a></li>
+            <li><a href="#" data-page="completed-bookings">Completed Bookings</a></li>
+
             <li><a href="#" data-page="users">Users</a></li>
             <li><a href="#" id="logoutBtn">Logout</a></li>
         </ul>
@@ -376,19 +380,7 @@ header {
                 <a id="createAdmin" href="create-admin.html" class="btn-secondary">
                     Create Admin
                 </a>
-            </div>
-
-
-            <div id="lotForm" style="margin-top: 1rem; display:none;">
-                <h3>Create Parking Lot</h3>
-                <input id="lotName" placeholder="Lot Name"><br><br>
-                <input id="lotAddress" placeholder="Address"><br><br>
-                <input id="hourlyRate" type="number" placeholder="Hourly Rate"><br><br>
-                <input id="totalSpots" type="number" placeholder="Total Spots"><br><br>
-                <button id="saveLot">Save Lot</button>
-            </div>
-
-            
+            </div>            
 
         </section>
     </div>
@@ -452,12 +444,17 @@ header {
 
         // PAGE LOADER
         async function loadPage(page) {
-            pageTitle.textContent = page.charAt(0).toUpperCase() + page.slice(1);
-            if (page === "overview") return loadOverview();
-            if (page === "lots") return loadLots();
-            if (page === "spots") return loadSpots();
-            if (page === "users") return loadUsers();
+                pageTitle.textContent = page.replace("-", " ").toUpperCase();
+
+                if (page === "overview") return loadOverview();
+                if (page === "lots") return loadLots();
+                if (page === "spots") return loadSpots();
+                if (page === "active-bookings") return loadActiveBookings();
+                if (page === "completed-bookings") return loadCompletedBookings();
+                if (page === "new-users") return loadNewUsers();
         }
+
+
 
         async function loadOverview() {
             contentArea.innerHTML = `
@@ -508,27 +505,159 @@ header {
         }
 
         async function loadSpots() {
-            contentArea.innerHTML = `
-        <h2>Manage Parking Spots</h2>
-        <button id="showCreateSpot" class="action-btn">➕ Add Parking Spot</button>
-    
-        <div id="spotForm" class="form-card" style="display:none;">
-          <h3>Create New Parking Spot</h3>
-          <input id="targetLotId" placeholder="Lot ID (exact)">
-          <input id="spotNumber" placeholder="Spot Number (e.g., A01)">
-          <button id="addSpotBtn" class="btn-save">Save Spot</button>
-          <div id="spotMsg" style="margin-top:.7rem; font-weight:bold;"></div>
-        </div>
-      `;
+                contentArea.innerHTML = `<h2>Spot Availability</h2>Loading...`;
 
-            document.getElementById("showCreateSpot").onclick = () => {
-                document.getElementById("spotForm").style.display = "block";
-            };
+                try {
+                    const lotsSnap = await getDocs(collection(db, "lots"));
+
+                    if (lotsSnap.empty) {
+                        contentArea.innerHTML = "<p>No parking lots found.</p>";
+                        return;
+                    }
+
+                    let html = "";
+
+                    for (const lotDoc of lotsSnap.docs) {
+                        const lot = lotDoc.data();
+                        const spotsSnap = await getDocs(
+                            collection(db, `lots/${lotDoc.id}/spots`)
+                        );
+
+                        let available = 0;
+                        let booked = 0;
+
+                        spotsSnap.forEach(s => {
+                            s.data().status === "available" ? available++ : booked++;
+                        });
+
+                        html += `
+                <div class="content-box" style="margin-bottom:1rem;">
+                    <h3>${lot.name}</h3>
+                    <p><b>Total Spots:</b> ${spotsSnap.size}</p>
+                    <p style="color:green"><b>Available:</b> ${available}</p>
+                    <p style="color:#c0392b"><b>Booked:</b> ${booked}</p>
+                </div>
+            `;
+                    }
+
+                    contentArea.innerHTML = html;
+
+                } catch (err) {
+                    console.error("Error loading spots:", err);
+                    contentArea.innerHTML = "<p>Error loading spot availability.</p>";
+                }
         }
 
-        async function loadUsers() {
-            contentArea.innerHTML = `<h2>Registered Users</h2>`;
+        async function loadActiveBookings() {
+            contentArea.innerHTML = `<h2>Active Bookings</h2>Loading...`;
+
+            const q = query(
+                collection(db, "bookings"),
+                where("status", "==", "active")
+            );
+
+            const snap = await getDocs(q);
+
+            if (snap.empty) {
+                contentArea.innerHTML = "<p>No active bookings.</p>";
+                return;
+            }
+
+            let html = "";
+
+            snap.forEach(docSnap => {
+                const b = docSnap.data();
+                html += `
+                    <div class="content-box" style="margin-bottom:1rem;">
+                        <p><b>Lot ID:</b> ${b.lotId}</p>
+                        <p><b>Spot ID:</b> ${b.spotId}</p>
+                        <p><b>User:</b> ${b.userId}</p>
+                        <p><b>Start:</b> ${new Date(b.startTime).toLocaleString()}</p>
+                        <p><b>End:</b> ${new Date(b.endTime).toLocaleString()}</p>
+                    </div>
+                `;
+            });
+
+            contentArea.innerHTML = html;
         }
+
+        async function loadCompletedBookings() {
+                contentArea.innerHTML = `<h2>Completed Bookings</h2>Loading...`;
+
+                const q = query(
+                    collection(db, "bookings"),
+                    where("status", "==", "completed")
+                );
+
+                const snap = await getDocs(q);
+
+                if (snap.empty) {
+                    contentArea.innerHTML = "<p>No completed bookings.</p>";
+                    return;
+                }
+
+                let html = "";
+
+                snap.forEach(docSnap => {
+                    const b = docSnap.data();
+                    html += `
+            <div class="content-box" style="margin-bottom:1rem;">
+                <p><b>Lot ID:</b> ${b.lotId}</p>
+                <p><b>Spot ID:</b> ${b.spotId}</p>
+                <p><b>User:</b> ${b.userId}</p>
+                <p><b>Ended:</b> ${new Date(b.endTime).toLocaleString()}</p>
+            </div>
+        `;
+                });
+
+                contentArea.innerHTML = html;
+        }
+
+
+        async function loadNewUsers() {
+                contentArea.innerHTML = `<h2>Newly Registered Users</h2><p>Loading...</p>`;
+
+                try {
+                    const q = query(
+                        collection(db, "users"),
+                        orderBy("createdAt", "desc")
+                    );
+
+                    const snap = await getDocs(q);
+
+                    if (snap.empty) {
+                        contentArea.innerHTML = "<p>No users found.</p>";
+                        return;
+                    }
+
+                    let html = `<h2>Newly Registered Users</h2>`;
+
+                    snap.forEach(docSnap => {
+                        const u = docSnap.data();
+
+                        const registeredAt = u.createdAt?.toDate
+                            ? u.createdAt.toDate().toLocaleString()
+                            : "Unknown";
+
+                        html += `
+                <div class="content-box" style="margin-bottom:1rem;">
+                    <p><b>Name:</b> ${u.name || "N/A"}</p>
+                    <p><b>Email:</b> ${u.email}</p>
+                    <p><b>Role:</b> ${u.role}</p>
+                    <p><b>Registered:</b> ${registeredAt}</p>
+                </div>
+            `;
+                    });
+
+                    contentArea.innerHTML = html;
+
+                } catch (err) {
+                    console.error("Failed to load users:", err);
+                    contentArea.innerHTML = "<p>Error loading users.</p>";
+                }
+            }
+
+
 
         /* ---------- LOGOUT ---------- */
         document.getElementById("logoutBtn").addEventListener("click", async () => {
