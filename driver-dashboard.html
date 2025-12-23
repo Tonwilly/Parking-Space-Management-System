@@ -412,9 +412,10 @@
                                 width:150px;box-shadow:0 0 6px rgba(0,0,0,0.1)">
                                 <h3>${d.spotNumber}</h3>
                                 <p>Status: ${d.status}</p>
-                                <button class="book-btn" onclick="openSpotBooking('${lotId}','${s.id}')">
-                                    Book Spot
-                                </button>
+                                <button class="book-btn" onclick="loadDriverSpots('${l.id}')">
+    View Spots
+</button>
+
                             </div>
                         `;
                     });
@@ -634,6 +635,31 @@
             }
         };
 
+    // Global function
+    window.loadDriverSpots = async function (lotId) {
+        const contentArea = document.getElementById("contentArea");
+        const spotsSnap = await getDocs(collection(db, `lots/${lotId}/spots`));
+
+        let html = `<h2>Parking Spots</h2><div style="display:flex;gap:1rem;flex-wrap:wrap;">`;
+
+        spotsSnap.forEach(s => {
+            const d = s.data();
+            html += `
+            <div style="
+                padding:1rem;background:#fff;border-radius:10px;
+                width:150px;box-shadow:0 0 6px rgba(0,0,0,0.1)">
+                <h3>${d.spotNumber}</h3>
+                <p>Status: ${d.status}</p>
+                <button class="book-btn" onclick="openSpotBooking('${lotId}','${s.id}')">
+                    Book Spot
+                </button>
+            </div>
+        `;
+        });
+
+        html += "</div>";
+        contentArea.innerHTML = html;
+    };
 
 
     // Logout button
