@@ -505,12 +505,71 @@ header {
 
             
 
-            document.getElementById("saveLot").addEventListener("click", saveLot);
+             document.addEventListener("click", async (e) => {
+                if (e.target.id === "addLotBtn") {
+                    document.getElementById("lotForm").style.display = "block";
+                }
+
+                if (e.target.id === "saveLot") {
+                    const name = document.getElementById("lotName").value.trim();
+                    const address = document.getElementById("lotAddress").value.trim();
+                    const hourlyRate = Number(document.getElementById("hourlyRate").value);
+                    const prefix = document.getElementById("spotPrefix").value.trim().toUpperCase();
+                    const spotCount = Number(document.getElementById("spotCount").value);
+
+                    if (!name || !address || !hourlyRate || !prefix || !spotCount) {
+                        alert("Please fill all fields.");
+                        return;
+                    }
+
+                    if (!/^[A-Z]$/.test(prefix)) {
+                        alert("Spot prefix must be a single A–Z letter.");
+                        return;
+                    }
+
+                    if (spotCount < 5 || spotCount > 30) {
+                        alert("Spot count must be between 5 and 30.");
+                        return;
+                    }
+
+                    try {
+                        // 1. Create parking lot
+                        const lotId = await createParkingLot({
+                            name,
+                            address,
+                            hourlyRate,
+                            totalSpots: spotCount,
+                            prefix
+                        });
+
+                        // 2. Auto-create parking spots with naming system
+                        for (let i = 1; i <= spotCount; i++) {
+                            const spotNumber = prefix + String(i).padStart(2, "0");
+                            await createParkingSpot({ lotId, spotNumber });
+                        }
+
+                        alert(`Parking Lot Created with ${spotCount} spots.`);
+
+                        // Reset Inputs
+                        document.getElementById("lotName").value = "";
+                        document.getElementById("lotAddress").value = "";
+                        document.getElementById("hourlyRate").value = "";
+                        document.getElementById("spotPrefix").value = "";
+                        document.getElementById("spotCount").value = "";
+
+                        document.getElementById("lotForm").style.display = "none";
+                        loadLots();
+
+                    } catch (err) {
+                        console.error(err);
+                        alert("Error creating lot and spots.");
+                    }
+                }
+
+            });
         }
 
-        async function saveLot() {
-                const name = document.getElementById("lotName").value;
-            }
+        
 
         async function loadSpots() {
                 contentArea.innerHTML = `<h2>Spot Availability</h2>Loading...`;
@@ -554,6 +613,30 @@ header {
                     console.error("Error loading spots:", err);
                     contentArea.innerHTML = "<p>Error loading spot availability.</p>";
                 }
+
+            /* ---------- SAVE SPOT ---------- */
+            document.addEventListener("click", async (e) => {
+                if (e.target.id === "addSpotBtn") {
+                    const lotId = document.getElementById("targetLotId").value.trim();
+                    const spotNumber = document.getElementById("spotNumber").value.trim();
+
+                    if (!lotId || !spotNumber) {
+                        document.getElementById("spotMsg").innerHTML = "<span style='color:red;'>Enter all fields</span>";
+                        return;
+                    }
+
+                    try {
+                        const spotId = await createParkingSpot({ lotId, spotNumber });
+                        document.getElementById("spotMsg").innerHTML = `<span style='color:green;'>Spot Created: ${spotId}</span>`;
+                        document.getElementById("targetLotId").value = "";
+                        document.getElementById("spotNumber").value = "";
+                    } catch (err) {
+                        console.error("Create spot failed:", err);
+                        document.getElementById("spotMsg").innerHTML = `<span style='color:crimson;'>Failed</span>`;
+                    }
+                }
+            });
+
         }
 
         async function loadActiveBookings() {
@@ -679,7 +762,7 @@ header {
             }
         });
 
-        /* ---------- SAVE LOT ---------- */
+        /* ---------- SAVE LOT ---------- 
         document.addEventListener("click", async (e) => {
             if (e.target.id === "addLotBtn") {
                 document.getElementById("lotForm").style.display = "block";
@@ -741,31 +824,9 @@ header {
                 }
             }
 
-        });
+        });*/
 
-        /* ---------- SAVE SPOT ---------- */
-        document.addEventListener("click", async (e) => {
-            if (e.target.id === "addSpotBtn") {
-                const lotId = document.getElementById("targetLotId").value.trim();
-                const spotNumber = document.getElementById("spotNumber").value.trim();
-
-                if (!lotId || !spotNumber) {
-                    document.getElementById("spotMsg").innerHTML = "<span style='color:red;'>Enter all fields</span>";
-                    return;
-                }
-
-                try {
-                    const spotId = await createParkingSpot({ lotId, spotNumber });
-                    document.getElementById("spotMsg").innerHTML = `<span style='color:green;'>Spot Created: ${spotId}</span>`;
-                    document.getElementById("targetLotId").value = "";
-                    document.getElementById("spotNumber").value = "";
-                } catch (err) {
-                    console.error("Create spot failed:", err);
-                    document.getElementById("spotMsg").innerHTML = `<span style='color:crimson;'>Failed</span>`;
-                }
-            }
-        });
-
+        
         /* ---------- small utils ---------- */
         function escapeHtml(str) {
             if (str === undefined || str === null) return "";
