@@ -502,7 +502,15 @@ header {
                 console.error("Failed to load lots:", err);
                 document.getElementById("lotsList").innerHTML = "<p style='color:crimson'>Failed to load lots.</p>";
             }
+
+            
+
+            document.getElementById("saveLot").addEventListener("click", saveLot);
         }
+
+        async function saveLot() {
+                const name = document.getElementById("lotName").value;
+            }
 
         async function loadSpots() {
                 contentArea.innerHTML = `<h2>Spot Availability</h2>Loading...`;
