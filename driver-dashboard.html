@@ -288,8 +288,11 @@
                     <div id="bookingForm" class="booking-popup" style="display:none;">
                         <h3>Book a Parking Spot</h3>
 
-                        <label>Select Lot:</label>
-                        <select id="bookingLot"></select><br><br>
+                        <label>Parking Lot:</label>
+<input type="text" id="bookingLotName" readonly>
+
+<input type="hidden" id="bookingLotId"><br><br>
+
 
                         <label>Select Spot:</label>
                         <select id="bookingSpot"></select><br><br>
@@ -476,15 +479,8 @@
             </div>
             `;
             });
-            bookingsSnap.forEach(docSnap => {
-                const booking = docSnap.data();
-                const bookingId = docSnap.id;
-
-                // AUTO COMPLETE CHECK
-                autoCompleteBooking(bookingId, booking);
-
-                // then render booking UI
-            });
+            
+            
 
 
         }
@@ -628,6 +624,7 @@
         </button>
     </div>
     `;
+    autoCompleteBooking(bookingId, booking);
         });
 
 
@@ -637,36 +634,44 @@
 
    // Global function to open booking form for a specific lot and spot
         window.openSpotBooking = async function (lotId, spotId = "") {
-            // Make sure the overview page is loaded
-            loadPage("overview");
+                loadPage("overview");
 
-            // Wait for the form to render (since loadPage injects HTML)
-            setTimeout(async () => {
-                const lotSelect = document.getElementById("bookingLot");
-                const spotSelect = document.getElementById("bookingSpot");
-                const bookingForm = document.getElementById("bookingForm");
+                setTimeout(async () => {
+                    const lotNameInput = document.getElementById("bookingLotName");
+                    const lotIdInput = document.getElementById("bookingLotId");
+                    const spotSelect = document.getElementById("bookingSpot");
+                    const bookingForm = document.getElementById("bookingForm");
 
-                if (!lotSelect || !spotSelect || !bookingForm) return;
+                    if (!lotNameInput || !lotIdInput || !spotSelect || !bookingForm) return;
 
-                bookingForm.style.display = "block";  // show form
-                lotSelect.value = lotId;
+                    bookingForm.style.display = "block";
 
-                // Load spots for the selected lot
-                const spotsSnap = await getDocs(collection(db, `lots/${lotId}/spots`));
-                spotSelect.innerHTML = `<option value="">Select a spot</option>`;
+                    // store lotId
+                    lotIdInput.value = lotId;
 
-                spotsSnap.forEach(s => {
-                    const d = s.data();
-                    if (d.status === "available") {
-                        spotSelect.innerHTML += `
+                    // fetch lot name
+                    const lotSnap = await getDoc(doc(db, "lots", lotId));
+                    if (lotSnap.exists()) {
+                        lotNameInput.value = lotSnap.data().name;
+                    }
+
+                    // load available spots
+                    const spotsSnap = await getDocs(collection(db, `lots/${lotId}/spots`));
+                    spotSelect.innerHTML = `<option value="">Select a spot</option>`;
+
+                    spotsSnap.forEach(s => {
+                        const d = s.data();
+                        if (d.status === "available") {
+                            spotSelect.innerHTML += `
                     <option value="${s.id}" ${s.id === spotId ? "selected" : ""}>
                         ${d.spotNumber}
                     </option>
                 `;
-                    }
-                });
-            }, 100); // 100ms is enough for DOM to update
-        };
+                        }
+                    });
+                }, 100);
+            };
+
 
 
 
