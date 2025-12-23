@@ -443,9 +443,17 @@ header {
             });
         });
 
-        document.getElementById("addLotBtn").addEventListener("click", () => {
-                // Call loadLots() to load the lot management UI
-                loadPage("lots");
+        const addLotBtn = document.getElementById("addLotBtn");
+            addLotBtn.addEventListener("click", async () => {
+                // 1. Load the lots page
+                await loadPage("lots");
+
+                // 2. Show the form immediately after load
+                const lotForm = document.getElementById("lotForm");
+                if (lotForm) lotForm.style.display = "block";
+
+                // Optional: scroll into view
+                lotForm.scrollIntoView({ behavior: "smooth" });
             });
 
 
@@ -490,15 +498,12 @@ header {
         <div id="lotsList"></div>
     `;
 
-                const showCreateBtn = document.getElementById("showCreateLot");
+                
                 const lotForm = document.getElementById("lotForm");
                 const saveBtn = document.getElementById("saveLot");
                 const lotsList = document.getElementById("lotsList");
 
-                // Show form
-                showCreateBtn.addEventListener("click", () => {
-                    lotForm.style.display = "block";
-                });
+                
 
                 // Load existing lots
                 async function renderLots() {
