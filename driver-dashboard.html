@@ -442,32 +442,7 @@
     }
     }
     async function loadBookingLots() {
-            window.openSpotBooking = async function (lotId, spotId) {
-            loadPage("overview");
-
-            setTimeout(async () => {
-                const lotSelect = document.getElementById("bookingLot");
-                const spotSelect = document.getElementById("bookingSpot");
-                const bookingForm = document.getElementById("bookingForm");
-
-                lotSelect.value = lotId;
-                bookingForm.style.display = "block";
-
-                const spotsSnap = await getDocs(collection(db, `lots/${lotId}/spots`));
-                spotSelect.innerHTML = `<option value="">Select a spot</option>`;
-
-                spotsSnap.forEach(s => {
-                    const d = s.data();
-                    if (d.status === "available") {
-                        spotSelect.innerHTML += `
-                    <option value="${s.id}" ${s.id === spotId ? "selected" : ""}>
-                        ${d.spotNumber}
-                    </option>
-                `;
-                    }
-                });
-            }, 200);
-            };
+            
 
             bookingsSnap.forEach(docSnap => {
                 const booking = docSnap.data();
@@ -645,21 +620,54 @@
         spotsSnap.forEach(s => {
             const d = s.data();
             html += `
-            <div style="
-                padding:1rem;background:#fff;border-radius:10px;
-                width:150px;box-shadow:0 0 6px rgba(0,0,0,0.1)">
-                <h3>${d.spotNumber}</h3>
-                <p>Status: ${d.status}</p>
-                <button class="book-btn" onclick="openSpotBooking('${lotId}','${s.id}')">
-                    Book Spot
-                </button>
-            </div>
-        `;
+    <div style="padding:1rem;background:#fff;border-radius:10px;width:150px;box-shadow:0 0 6px rgba(0,0,0,0.1)">
+        <h3>${d.spotNumber}</h3>
+        <p>Status: ${d.status}</p>
+        <button class="book-btn" onclick="openSpotBooking('${lotId}','${s.id}')">
+            Book Spot
+        </button>
+    </div>
+    `;
         });
+
 
         html += "</div>";
         contentArea.innerHTML = html;
     };
+
+   // Global function to open booking form for a specific lot and spot
+        window.openSpotBooking = async function (lotId, spotId = "") {
+            // Make sure the overview page is loaded
+            loadPage("overview");
+
+            // Wait for the form to render (since loadPage injects HTML)
+            setTimeout(async () => {
+                const lotSelect = document.getElementById("bookingLot");
+                const spotSelect = document.getElementById("bookingSpot");
+                const bookingForm = document.getElementById("bookingForm");
+
+                if (!lotSelect || !spotSelect || !bookingForm) return;
+
+                bookingForm.style.display = "block";  // show form
+                lotSelect.value = lotId;
+
+                // Load spots for the selected lot
+                const spotsSnap = await getDocs(collection(db, `lots/${lotId}/spots`));
+                spotSelect.innerHTML = `<option value="">Select a spot</option>`;
+
+                spotsSnap.forEach(s => {
+                    const d = s.data();
+                    if (d.status === "available") {
+                        spotSelect.innerHTML += `
+                    <option value="${s.id}" ${s.id === spotId ? "selected" : ""}>
+                        ${d.spotNumber}
+                    </option>
+                `;
+                    }
+                });
+            }, 100); // 100ms is enough for DOM to update
+        };
+
 
 
     // Logout button
