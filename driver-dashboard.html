@@ -313,7 +313,7 @@
 
                 setTimeout(() => {
                     document.getElementById("submitBooking").addEventListener("click", async () => {
-                        const lotId = bookingLot.value;
+                        const lotId = document.getElementById("bookingLotId").value;
                         const spotId = bookingSpot.value;
                         const start = startTime.value;
                         const end = endTime.value;
@@ -437,58 +437,19 @@
                 <p>View and manage your bookings.</p>
                 <div id="bookingsList">Loading...</div>`;
                 
-                loadMyBookings();
+                
                 break;
 
             default:
                 contentArea.innerHTML = `<p>Page not found.</p>`;
     }
     }
-    async function loadBookingLots() {
-            
-
-            bookingsSnap.forEach(docSnap => {
-                const booking = docSnap.data();
-                const bookingId = docSnap.id;
-
-                html += `
-            <div style="
-                background:#fff;
-                padding:1rem;
-                border-radius:10px;
-                box-shadow:0 0 6px rgba(0,0,0,0.1);
-                margin-bottom:1rem;
-            ">
-                <p><b>Lot:</b> ${booking.lotId}</p>
-                <p><b>Spot:</b> ${booking.spotId}</p>
-                <p><b>Start:</b> ${new Date(booking.startTime).toLocaleString()}</p>
-                <p><b>End:</b> ${new Date(booking.endTime).toLocaleString()}</p>
-                <p><b>Status:</b> ${booking.status}</p>
-
-                ${booking.status === "active"
-                        ? `<button class="book-btn"
-                            onclick="cancelBooking(
-                                '${bookingId}',
-                                '${booking.lotId}',
-                                '${booking.spotId}'
-                            )">
-                            Cancel Booking
-                        </button>`
-                        : ""
-                    }
-            </div>
-            `;
-            });
-            
-            
-
-
-        }
+    
 
         document.addEventListener("click", async (e) => {
             if (e.target.id !== "submitBooking") return;
 
-            const lotId = document.getElementById("bookingLot").value;
+            const lotId = document.getElementById("bookingLotId").value;
             const spotId = document.getElementById("bookingSpot").value;
             const startVal = document.getElementById("startTime").value;
             const endVal = document.getElementById("endTime").value;
