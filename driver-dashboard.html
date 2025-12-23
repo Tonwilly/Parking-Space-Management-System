@@ -236,8 +236,8 @@
 <script type="module">
     import { auth, db } from "./js/firebase-config.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-    import { addDoc,updateDoc,getDoc,getDocs,collection,query,where,doc} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-
+    import { addDoc,updateDoc,getDoc,getDocs,collection,query,where,doc, runTransaction, serverTimestamp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+    
     import { getAuth } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
     import { getFirestore } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
@@ -416,8 +416,8 @@
                                 <h3>${d.spotNumber}</h3>
                                 <p>Status: ${d.status}</p>
                                 <button class="book-btn" onclick="loadDriverSpots('${l.id}')">
-    View Spots
-</button>
+                                            View Spots
+                                    </button>
 
                             </div>
                         `;
@@ -433,9 +433,10 @@
                 break;
             case "my-bookings":
                 contentArea.innerHTML = `
-                <h2>My Bookings</h2>
-                <p>View and manage your bookings.</p>
-                <div id="bookingsList">Loading...</div>`;
+                    <h2>My Bookings</h2>
+                    <p>View and manage your bookings.</p>
+                    <div id="bookingsList">Loading...</div>
+                `;
                 
                 
                 break;
@@ -497,21 +498,19 @@
                     return;
                 }
 
-                /* --------- CREATE BOOKING --------- */
-                await addDoc(collection(db, "bookings"), {
-                    userId: auth.currentUser.uid,
-                    lotId,
-                    spotId,
-                    startTime: startTime.toISOString(),
-                    endTime: endTime.toISOString(),
-                    status: "active",
-                    createdAt: new Date().toISOString()
-                });
+                try {
+                    await confirmBookingAtomic({
+                        lotId,
+                        spotId,
+                        userId: auth.currentUser.uid
+                    });
 
-                /* --------- LOCK SPOT --------- */
-                await updateDoc(spotRef, {
-                    status: "booked"
-                });
+                    alert("Booking confirmed!");
+                    loadPage("home");
+
+                } catch (err) {
+                    alert(err.message || "Booking failed");
+                }
 
                 bookingMsg.style.color = "green";
                 bookingMsg.textContent = "Booking confirmed successfully.";
@@ -735,6 +734,34 @@
                 );
             }
         }
+    async function confirmBookingAtomic({ lotId, spotId, userId }) {
+  const spotRef = doc(db, `lots/${lotId}/spots/${spotId}`);
+  const bookingRef = doc(collection(db, "bookings"));
+
+  await runTransaction(db, async (transaction) => {
+    const spotSnap = await transaction.get(spotRef);
+
+    // 🚫 Spot no longer available
+    if (!spotSnap.exists() || spotSnap.data().status !== "available") {
+      throw new Error("Spot already booked");
+    }
+
+    // ✅ Lock the spot
+    transaction.update(spotRef, {
+      status: "booked",
+      lastUpdated: serverTimestamp()
+    });
+
+    // ✅ Create booking
+    transaction.set(bookingRef, {
+      userId,
+      lotId,
+      spotId,
+      status: "confirmed",
+      createdAt: serverTimestamp()
+    });
+  });
+}
 
 </script>
 </body>
