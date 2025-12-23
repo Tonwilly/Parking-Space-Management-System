@@ -464,48 +464,47 @@ header {
         }
 
         async function loadLots() {
-            contentArea.innerHTML = `
-        <h2>Manage Parking Lots</h2>
-        <button id="showCreateLot" class="action-btn">➕ Create New Lot</button>
-    
-        <div id="lotForm" class="form-card" style="display:none;">
-          <h3>Create Parking Lot</h3>
-          <input id="lotName" placeholder="Lot Name">
-          <input id="lotAddress" placeholder="Location / Address">
-          <input id="hourlyRate" type="number" placeholder="Hourly Charge (KES)">
-          <input id="totalSpots" type="number" placeholder="Total Spots">
-          <input id="spotPrefix" placeholder="Spot Letter Prefix (e.g., A)">
-          <input id="spotCount" type="number" placeholder="Number of Spots (5-30)">
-          <button id="saveLot" class="btn-save">Save Lot</button>
-        </div>
-    
-        <h3 style="margin-top:2rem;">Existing Lots</h3>
-        <div id="lotsList"></div>
-      `;
+                contentArea.innerHTML = `
+            <h2>Manage Parking Lots</h2>
+            <button id="showCreateLot" class="action-btn">➕ Create New Lot</button>
+        
+            <div id="lotForm" class="form-card" style="display:none;">
+            <h3>Create Parking Lot</h3>
+            <input id="lotName" placeholder="Lot Name">
+            <input id="lotAddress" placeholder="Location / Address">
+            <input id="hourlyRate" type="number" placeholder="Hourly Charge (KES)">
+            <input id="totalSpots" type="number" placeholder="Total Spots">
+            <input id="spotPrefix" placeholder="Spot Letter Prefix (e.g., A)">
+            <input id="spotCount" type="number" placeholder="Number of Spots (5-30)">
+            <button id="saveLot" class="btn-save">Save Lot</button>
+            </div>
+        
+            <h3 style="margin-top:2rem;">Existing Lots</h3>
+            <div id="lotsList"></div>
+        `;
 
-            document.getElementById("showCreateLot").onclick = () => {
-                document.getElementById("lotForm").style.display = "block";
-            };
+                document.getElementById("showCreateLot").onclick = () => {
+                    document.getElementById("lotForm").style.display = "block";
+                };
 
-            // Load lots
-            try {
-                const lotsRef = collection(db, "lots");
-                const lotsSnap = await getDocs(lotsRef);
-                let html = "<ul>";
-                lotsSnap.forEach(d => {
-                    const lot = d.data();
-                    html += `<li><b>${escapeHtml(lot.name)}</b> — ${escapeHtml(lot.address)}</li>`;
-                });
-                html += "</ul>";
-                document.getElementById("lotsList").innerHTML = html;
-            } catch (err) {
-                console.error("Failed to load lots:", err);
-                document.getElementById("lotsList").innerHTML = "<p style='color:crimson'>Failed to load lots.</p>";
-            }
+                // Load lots
+                try {
+                    const lotsRef = collection(db, "lots");
+                    const lotsSnap = await getDocs(lotsRef);
+                    let html = "<ul>";
+                    lotsSnap.forEach(d => {
+                        const lot = d.data();
+                        html += `<li><b>${escapeHtml(lot.name)}</b> — ${escapeHtml(lot.address)}</li>`;
+                    });
+                    html += "</ul>";
+                    document.getElementById("lotsList").innerHTML = html;
+                } catch (err) {
+                    console.error("Failed to load lots:", err);
+                    document.getElementById("lotsList").innerHTML = "<p style='color:crimson'>Failed to load lots.</p>";
+                }
 
-            
-
-             document.addEventListener("click", async (e) => {
+        }
+        document.addEventListener("click", async (e) => {
                 if (e.target.id === "addLotBtn") {
                     document.getElementById("lotForm").style.display = "block";
                 }
@@ -567,8 +566,6 @@ header {
                 }
 
             });
-        }
-
         
 
         async function loadSpots() {
