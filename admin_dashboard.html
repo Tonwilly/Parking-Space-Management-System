@@ -503,69 +503,70 @@ header {
                     document.getElementById("lotsList").innerHTML = "<p style='color:crimson'>Failed to load lots.</p>";
                 }
 
-        }
-        document.addEventListener("click", async (e) => {
-                if (e.target.id === "addLotBtn") {
-                    document.getElementById("lotForm").style.display = "block";
-                }
+                 document.addEventListener("click", async (e) => {
+                    /*if (e.target.id === "addLotBtn") {
+                        document.getElementById("lotForm").style.display = "block";
+                    }*/
 
-                if (e.target.id === "saveLot") {
-                    const name = document.getElementById("lotName").value.trim();
-                    const address = document.getElementById("lotAddress").value.trim();
-                    const hourlyRate = Number(document.getElementById("hourlyRate").value);
-                    const prefix = document.getElementById("spotPrefix").value.trim().toUpperCase();
-                    const spotCount = Number(document.getElementById("spotCount").value);
+                    if (e.target.id === "saveLot") {
+                        const name = document.getElementById("lotName").value.trim();
+                        const address = document.getElementById("lotAddress").value.trim();
+                        const hourlyRate = Number(document.getElementById("hourlyRate").value);
+                        const prefix = document.getElementById("spotPrefix").value.trim().toUpperCase();
+                        const spotCount = Number(document.getElementById("spotCount").value);
 
-                    if (!name || !address || !hourlyRate || !prefix || !spotCount) {
-                        alert("Please fill all fields.");
-                        return;
-                    }
-
-                    if (!/^[A-Z]$/.test(prefix)) {
-                        alert("Spot prefix must be a single A–Z letter.");
-                        return;
-                    }
-
-                    if (spotCount < 5 || spotCount > 30) {
-                        alert("Spot count must be between 5 and 30.");
-                        return;
-                    }
-
-                    try {
-                        // 1. Create parking lot
-                        const lotId = await createParkingLot({
-                            name,
-                            address,
-                            hourlyRate,
-                            totalSpots: spotCount,
-                            prefix
-                        });
-
-                        // 2. Auto-create parking spots with naming system
-                        for (let i = 1; i <= spotCount; i++) {
-                            const spotNumber = prefix + String(i).padStart(2, "0");
-                            await createParkingSpot({ lotId, spotNumber });
+                        if (!name || !address || !hourlyRate || !prefix || !spotCount) {
+                            alert("Please fill all fields.");
+                            return;
                         }
 
-                        alert(`Parking Lot Created with ${spotCount} spots.`);
+                        if (!/^[A-Z]$/.test(prefix)) {
+                            alert("Spot prefix must be a single A–Z letter.");
+                            return;
+                        }
 
-                        // Reset Inputs
-                        document.getElementById("lotName").value = "";
-                        document.getElementById("lotAddress").value = "";
-                        document.getElementById("hourlyRate").value = "";
-                        document.getElementById("spotPrefix").value = "";
-                        document.getElementById("spotCount").value = "";
+                        if (spotCount < 5 || spotCount > 30) {
+                            alert("Spot count must be between 5 and 30.");
+                            return;
+                        }
 
-                        document.getElementById("lotForm").style.display = "none";
-                        loadLots();
+                        try {
+                            // 1. Create parking lot
+                            const lotId = await createParkingLot({
+                                name,
+                                address,
+                                hourlyRate,
+                                totalSpots: spotCount,
+                                prefix
+                            });
 
-                    } catch (err) {
-                        console.error(err);
-                        alert("Error creating lot and spots.");
+                            // 2. Auto-create parking spots with naming system
+                            for (let i = 1; i <= spotCount; i++) {
+                                const spotNumber = prefix + String(i).padStart(2, "0");
+                                await createParkingSpot({ lotId, spotNumber });
+                            }
+
+                            alert(`Parking Lot Created with ${spotCount} spots.`);
+
+                            // Reset Inputs
+                            document.getElementById("lotName").value = "";
+                            document.getElementById("lotAddress").value = "";
+                            document.getElementById("hourlyRate").value = "";
+                            document.getElementById("spotPrefix").value = "";
+                            document.getElementById("spotCount").value = "";
+
+                            document.getElementById("lotForm").style.display = "none";
+                            loadLots();
+
+                        } catch (err) {
+                            console.error(err);
+                            alert("Error creating lot and spots.");
+                        }
                     }
-                }
 
-            });
+                });
+        }
+       
         
 
         async function loadSpots() {
