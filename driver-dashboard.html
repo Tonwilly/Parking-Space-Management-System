@@ -735,33 +735,32 @@
             }
         }
     async function confirmBookingAtomic({ lotId, spotId, userId }) {
-  const spotRef = doc(db, `lots/${lotId}/spots/${spotId}`);
-  const bookingRef = doc(collection(db, "bookings"));
+        const spotRef = doc(db, `lots/${lotId}/spots/${spotId}`);
+        const bookingRef = doc(collection(db, "bookings"));
 
-  await runTransaction(db, async (transaction) => {
-    const spotSnap = await transaction.get(spotRef);
+        await runTransaction(db, async (transaction) => {
+            const spotSnap = await transaction.get(spotRef);
 
-    // 🚫 Spot no longer available
-    if (!spotSnap.exists() || spotSnap.data().status !== "available") {
-      throw new Error("Spot already booked");
+            if (!spotSnap.exists() || spotSnap.data().status !== "available") {
+            throw new Error("Spot already booked");
+            }
+
+            transaction.update(spotRef, {
+            status: "booked",
+            lastUpdated: serverTimestamp()
+            });
+
+            transaction.set(bookingRef, {
+            userId,
+            lotId,
+            spotId,
+            status: "active",   // ✅ allowed
+            createdAt: serverTimestamp()
+            });
+        });
     }
 
-    // ✅ Lock the spot
-    transaction.update(spotRef, {
-      status: "booked",
-      lastUpdated: serverTimestamp()
-    });
 
-    // ✅ Create booking
-    transaction.set(bookingRef, {
-      userId,
-      lotId,
-      spotId,
-      status: "confirmed",
-      createdAt: serverTimestamp()
-    });
-  });
-}
 
 </script>
 </body>
