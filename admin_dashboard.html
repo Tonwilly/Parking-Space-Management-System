@@ -392,7 +392,7 @@ header {
         import { query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-        import { doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+        import { doc, getDoc, collection, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
         const contentArea = document.getElementById("contentArea");
         const pageTitle = document.getElementById("pageTitle");
@@ -819,6 +819,17 @@ header {
                 alert("Logout failed. Check console.");
             }
         });
+
+        function listenToActiveBookings() {
+                const q = query(
+                    collection(db, "bookings"),
+                    where("status", "==", "active")
+                );
+
+                onSnapshot(q, snap => {
+                    document.getElementById("activeBookingCount").textContent = snap.size;
+                });
+            }
 
 
         

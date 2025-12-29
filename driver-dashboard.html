@@ -448,78 +448,34 @@
     
 
         document.addEventListener("click", async (e) => {
-            if (e.target.id !== "submitBooking") return;
+                if (e.target.id !== "submitBooking") return;
 
-            const lotId = document.getElementById("bookingLotId").value;
-            const spotId = document.getElementById("bookingSpot").value;
-            const startVal = document.getElementById("startTime").value;
-            const endVal = document.getElementById("endTime").value;
-            const bookingMsg = document.getElementById("bookingMsg");
+                const lotId = document.getElementById("bookingLotId").value;
+                const spotId = document.getElementById("bookingSpot").value;
+                const startVal = document.getElementById("startTime").value;
+                const endVal = document.getElementById("endTime").value;
+                const bookingMsg = document.getElementById("bookingMsg");
 
-            if (!lotId || !spotId || !startVal || !endVal) {
-                bookingMsg.textContent = "Please complete all fields.";
-                return;
-            }
-
-            const startTime = new Date(startVal);
-            const endTime = new Date(endVal);
-
-            if (endTime <= startTime) {
-                bookingMsg.textContent = "End time must be after start time.";
-                return;
-            }
-
-            try {
-                /* --------- DOUBLE BOOKING PREVENTION --------- */
-                const spotRef = doc(db, `lots/${lotId}/spots`, spotId);
-                const spotSnap = await getDoc(spotRef);
-
-                if (!spotSnap.exists()) {
-                    bookingMsg.textContent = "Spot does not exist.";
-                    return;
-                }
-
-                if (spotSnap.data().status !== "available") {
-                    bookingMsg.textContent = "This spot is already booked.";
-                    return;
-                }
-
-                /* --------- CHECK ACTIVE BOOKINGS --------- */
-                const activeBookingQuery = query(
-                    collection(db, "bookings"),
-                    where("spotId", "==", spotId),
-                    where("status", "==", "active")
-                );
-
-                const activeBookings = await getDocs(activeBookingQuery);
-
-                if (!activeBookings.empty) {
-                    bookingMsg.textContent = "Spot already has an active booking.";
-                    return;
-                }
+                bookingMsg.textContent = "";
 
                 try {
                     await confirmBookingAtomic({
                         lotId,
                         spotId,
-                        userId: auth.currentUser.uid
+                        userId: auth.currentUser.uid,
+                        startTime: startVal,
+                        endTime: endVal
                     });
 
-                    alert("Booking confirmed!");
-                    loadPage("home");
+                    bookingMsg.style.color = "green";
+                    bookingMsg.textContent = "Booking confirmed successfully!";
+                    loadMyBookings();
 
                 } catch (err) {
-                    alert(err.message || "Booking failed");
+                    bookingMsg.style.color = "red";
+                    bookingMsg.textContent = err.message || "Booking failed.";
                 }
-
-                bookingMsg.style.color = "green";
-                bookingMsg.textContent = "Booking confirmed successfully.";
-
-            } catch (err) {
-                console.error("Booking failed:", err);
-                bookingMsg.textContent = "Booking failed. Try again.";
-            }
-        });
+            });
 
         window.cancelBooking = async function (bookingId, lotId, spotId) {
             const bookingRef = doc(db, "bookings", bookingId);
@@ -759,6 +715,18 @@
             });
         });
     }
+    async function runAutoComplete() {
+            const q = query(collection(db, "bookings"), where("status", "==", "active"));
+            const snap = await getDocs(q);
+
+            snap.forEach(docSnap => {
+                autoCompleteBooking(docSnap.id, docSnap.data());
+            });
+        }
+
+        // run every 30 seconds
+        setInterval(runAutoComplete, 30000);
+
 
 
 
